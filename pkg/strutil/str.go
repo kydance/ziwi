@@ -13,6 +13,7 @@ package strutil
 import (
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 // CamelCase converts string to camelCase string.
@@ -38,6 +39,10 @@ func CamelCase(str string) string {
 }
 
 // Capitalize converts first character of string to upper case and the remaining to lower case.
+//
+//	Example:
+//		"hello" -> "Hello"
+//		"GoLang" -> "Golang"
 func Capitalize(str string) string {
 	rs := make([]rune, 0, len(str))
 	for idx, val := range str {
@@ -50,4 +55,30 @@ func Capitalize(str string) string {
 	}
 
 	return string(rs)
+}
+
+// UpperFirst converts first character of string to upper case.
+//
+//	Example:
+//		"hello" -> "Hello"
+func UpperFirst(str string) string {
+	if len(str) == 0 {
+		return ""
+	}
+
+	r, size := utf8.DecodeRuneInString(str)
+	return string(unicode.ToUpper(r)) + str[size:]
+}
+
+// LowerFirst converts first character of string to lower case.
+//
+//	Example:
+//		"HELLO WORLD" -> "hELLO WORLD"
+func LowerFirst(str string) string {
+	if len(str) == 0 {
+		return ""
+	}
+
+	r, size := utf8.DecodeRuneInString(str)
+	return string(unicode.ToLower(r)) + str[size:]
 }

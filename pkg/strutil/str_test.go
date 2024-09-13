@@ -59,3 +59,58 @@ func TestCamelCase(t *testing.T) {
 		}
 	}
 }
+
+func TestUpperFirst(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"hello", "Hello"},
+		{"world", "World"},
+		{"GoLang", "GoLang"},
+		{"", ""},
+		{"h", "H"},
+		{"H", "H"},
+		{"123", "123"},
+		{"!@#", "!@#"},
+		{"你好", "你好"},
+		{"你好世界", "你好世界"},
+		{"你好，世界！", "你好，世界！"},
+		{"中文编程", "中文编程"},
+	}
+
+	for _, test := range tests {
+		result := UpperFirst(test.input)
+		if result != test.expected {
+			t.Errorf("UpperFirst(%q) = %q; expected %q", test.input, result, test.expected)
+		}
+	}
+}
+
+func TestLowerFirst(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"Hello", "hello"},
+		{"World", "world"},
+		{"GoLang", "goLang"},
+		{"", ""},
+		{"h", "h"},
+		{"H", "h"},
+		{"123", "123"},
+		{"!@#", "!@#"},
+		{"你好", "你好"},
+		{"你好世界", "你好世界"},
+		{"你好，世界！", "你好，世界！"},
+		{"中文编程", "中文编程"},
+		{"HELLO WORLD", "hELLO WORLD"},
+	}
+
+	for _, test := range tests {
+		result := LowerFirst(test.input)
+		if result != test.expected {
+			t.Errorf("LowerFirst(%q) = %q; expected %q", test.input, result, test.expected)
+		}
+	}
+}
