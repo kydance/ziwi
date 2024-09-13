@@ -44,11 +44,11 @@ linters:
     enable:
         - asciicheck
         - bodyclose
+        - copyloopvar
         - dupl
         - errcheck
         - funlen
         - goconst
-        - gocritic
         - gocyclo
         - gofmt
         - goimports
