@@ -68,3 +68,36 @@ func TestSplitIntoStrings(t *testing.T) {
 		}
 	}
 }
+
+func TestPadAtPosEdgeCases(t *testing.T) {
+	tests := []struct {
+		str  string
+		size int
+		pad  string
+		pos  int
+		want string
+	}{
+		{"", 5, "-", 0, "-----"},
+		{"", 5, "-", 1, "-----"},
+		{"", 5, "-", 2, "-----"},
+
+		{"hello", 3, "", 0, "hello"},
+		{"hello", 3, "", 1, "hello"},
+		{"hello", 3, "", 2, "hello"},
+
+		{"hello", 6, "*", 0, "hello*"},
+		{"hello", 6, "*", 1, "*hello"},
+		{"hello", 6, "*", 2, "hello*"},
+
+		{"hello", 10, "abc", 0, "abhelloabc"},
+		{"hello", 10, "abc", 1, "abcabhello"},
+		{"hello", 10, "abc", 2, "helloabcab"},
+	}
+
+	for _, test := range tests {
+		result := padAtPos(test.str, test.size, test.pad, test.pos)
+		if result != test.want {
+			t.Errorf("padAtPos(%q, %d, %q, %d) = %q; expected %q", test.str, test.size, test.pad, test.pos, result, test.want)
+		}
+	}
+}

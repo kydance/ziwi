@@ -110,3 +110,48 @@ func equalRuneSlices(a, b []rune) bool {
 	}
 	return true
 }
+
+// padAtPos pads string at given position.
+// pos: 0 - both, 1 - left, 2 - right
+//
+//	Example:
+//		padAtPos("hello", 6, "*", 0) -> "hello*"
+//		padAtPos("hello", 10, "abc", 0) -> "abhelloabc"
+func padAtPos(str string, size int, pad string, pos int) string {
+	if len(str) >= size {
+		return str
+	}
+
+	if pad == "" {
+		pad = " "
+	}
+	padSize := len(pad)
+
+	// Calculate the number of padding characters needed.
+	size = size - len(str)
+	leftPadSize := 0
+	if pos == 0 {
+		leftPadSize = size / 2
+	} else if pos == 1 {
+		leftPadSize = size
+	}
+	rightPadSize := size - leftPadSize
+
+	// Pad left
+	leftPad := ""
+	curr := 0
+	for curr < leftPadSize {
+		leftPad += string(pad[curr%padSize])
+		curr++
+	}
+
+	// Pad right
+	rightPad := ""
+	curr = 0
+	for curr < rightPadSize {
+		rightPad += string(pad[curr%padSize])
+		curr++
+	}
+
+	return leftPad + str + rightPad
+}

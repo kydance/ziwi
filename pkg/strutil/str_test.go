@@ -114,3 +114,69 @@ func TestLowerFirst(t *testing.T) {
 		}
 	}
 }
+
+func TestPad(t *testing.T) {
+	tests := []struct {
+		src    string
+		size   int
+		pad    string
+		result string
+	}{
+		{"hello", 10, "!", "!!hello!!!"},
+		{"world", 5, "*", "world"},
+		{"Go", 4, "-", "-Go-"},
+		{"", 3, "#", "###"},
+		{"你好", 8, "$", "$你好$"},
+	}
+
+	for _, test := range tests {
+		result := Pad(test.src, test.size, test.pad)
+		if result != test.result {
+			t.Errorf("Pad(%q, %d, %q) = %q; expected %q", test.src, test.size, test.pad, result, test.result)
+		}
+	}
+}
+
+func TestPadLeft(t *testing.T) {
+	tests := []struct {
+		src    string
+		size   int
+		pad    string
+		result string
+	}{
+		{"hello", 10, "!", "!!!!!hello"},
+		{"world", 5, "*", "world"},
+		{"Go", 4, "-", "--Go"},
+		{"", 3, "#", "###"},
+		{"你好", 8, "@", "@@你好"},
+	}
+
+	for _, test := range tests {
+		result := PadLeft(test.src, test.size, test.pad)
+		if result != test.result {
+			t.Errorf("PadLeft(%q, %d, %q) = %q; expected %.sql", test.src, test.size, test.pad, result, test.result)
+		}
+	}
+}
+
+func TestPadRight(t *testing.T) {
+	tests := []struct {
+		src    string
+		size   int
+		pad    string
+		result string
+	}{
+		{"hello", 10, "!", "hello!!!!!"},
+		{"world", 5, "*", "world"},
+		{"Go", 4, "-", "Go--"},
+		{"", 3, "#", "###"},
+		{"你好", 8, "~", "你好~~"},
+	}
+
+	for _, test := range tests {
+		result := PadRight(test.src, test.size, test.pad)
+		if result != test.result {
+			t.Errorf("PadRight(%q, %d, %q) = %q; expected %q", test.src, test.size, test.pad, result, test.result)
+		}
+	}
+}

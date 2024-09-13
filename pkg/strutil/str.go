@@ -82,3 +82,18 @@ func LowerFirst(str string) string {
 	r, size := utf8.DecodeRuneInString(str)
 	return string(unicode.ToLower(r)) + str[size:]
 }
+
+// Pad pads the src to the left side and the right side with pad string until the src is size long.
+func Pad(src string, size int, pad string) string {
+	return padAtPos(src, size, pad, 0)
+}
+
+// PadLeft pads the src to the left side with pad string until the src is size long.
+func PadLeft(src string, size int, pad string) string {
+	return padAtPos(src, size, pad, 1)
+}
+
+// PadRight pads the src to the right side with pad string until the src is size long.
+func PadRight(src string, size int, pad string) string {
+	return padAtPos(src, size, pad, 2)
+}
