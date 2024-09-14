@@ -180,3 +180,115 @@ func TestPadRight(t *testing.T) {
 		}
 	}
 }
+
+func TestKebabCase(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"hello world", "hello-world"},
+		{"Hello World", "hello-world"},
+		{"hello-world", "hello-world"},
+		{"hello_world", "hello-world"},
+
+		{"hello", "hello"},
+		{"Hello", "hello"},
+
+		{"123", "123"},
+		{"!@#", ""},
+		{"", ""},
+
+		{"foobar", "foobar"},
+		{"&FOO:BAR$BAZ", "foo-bar-baz"},
+		{"fooBar", "foo-bar"},
+		{"FOObar", "fo-obar"},
+		{"$foo%", "foo"},
+		{"   $#$Foo   22    bar   ", "foo-22-bar"},
+		{"Foo-#1😄$_%^&*(1bar", "foo-1-1-bar"},
+
+		{"你好世界", "你好世界"},
+		{"中文编程", "中文编程"},
+	}
+
+	for _, test := range tests {
+		result := KebabCase(test.input)
+		if result != test.expected {
+			t.Errorf("KebabCase(%q) = %q; expected %q", test.input, result, test.expected)
+		}
+	}
+}
+
+func TestUpperKebabCase(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"hello world", "HELLO-WORLD"},
+		{"Hello World", "HELLO-WORLD"},
+		{"hello-world", "HELLO-WORLD"},
+		{"hello_world", "HELLO-WORLD"},
+
+		{"hello", "HELLO"},
+		{"Hello", "HELLO"},
+		{"123", "123"},
+
+		{"!@#", ""},
+
+		{"你好世界", "你好世界"},
+		{"中文编程", "中文编程"},
+
+		{"Foo-Bar-Baz", "FOO-BAR-BAZ"},
+		{"fooBarBaz", "FOO-BAR-BAZ"},
+	}
+
+	for _, test := range tests {
+		result := UpperKebabCase(test.input)
+		if result != test.expected {
+			t.Errorf("UpperKebabCase(%q) = %q; expected %q", test.input, result, test.expected)
+		}
+	}
+}
+
+func TestSnakeCase(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"hello_world", "hello_world"},
+		{"&FOO:BAR$BAZ", "foo_bar_baz"},
+		{"Hello World", "hello_world"},
+		{"123", "123"},
+		{"!@#", ""},
+		{"你好世界", "你好世界"},
+		{"你好，世界！", "你好，世界！"},
+	}
+
+	for _, test := range tests {
+		result := SnakeCase(test.input)
+		if result != test.expected {
+			t.Errorf("SnakeCase(%q) = %q; expected %q", test.input, result, test.expected)
+		}
+	}
+}
+
+func TestUpperSnakeCase(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"hello_world", "HELLO_WORLD"},
+		{"&FOO:BAR$BAZ", "FOO_BAR_BAZ"},
+		{"Hello World", "HELLO_WORLD"},
+		{"123", "123"},
+		{"!@#", ""},
+		{"你好世界", "你好世界"},
+		{"你好，世界！", "你好，世界！"},
+	}
+
+	for _, test := range tests {
+		result := UpperSnakeCase(test.input)
+		if result != test.expected {
+			t.Errorf("UpperSnakeCase(%q) = %q; expected %q", test.input, result, test.expected)
+		}
+	}
+}

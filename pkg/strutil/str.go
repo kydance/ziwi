@@ -97,3 +97,43 @@ func PadLeft(src string, size int, pad string) string {
 func PadRight(src string, size int, pad string) string {
 	return padAtPos(src, size, pad, 2)
 }
+
+// KebabCase converts string to kebab-case string, non letters and numbers will be ignored.
+//
+//	Example:
+//		"hello_world" -> "hello-world"
+//		"&FOO:BAR$BAZ" -> "foo-bar-baz"
+func KebabCase(str string) string {
+	vs := splitIntoStrings(str, false)
+	return strings.Join(vs, "-")
+}
+
+// UpperKebabCase converts string to upper KEBAB-CASE string,
+// non letters and numbers will be ignored.
+//
+//	Example:
+//		"Hello World" -> "HELLO-WORLD"
+//		"!@#" -> ""
+func UpperKebabCase(str string) string {
+	return strings.ToUpper(KebabCase(str))
+}
+
+// SnakeCase converts string to snake_case string, non letters and numbers will be ignored.
+//
+//	Example:
+//		"hello_world" -> "hello_world"
+//		"&FOO:BAR$BAZ" -> "foo_bar_baz"
+func SnakeCase(str string) string {
+	vs := splitIntoStrings(str, false)
+	return strings.Join(vs, "_")
+}
+
+// UpperSnakeCase converts string to upper SNAKE_CASE string,
+// non letters and numbers will be ignored.
+//
+//	Example:
+//		"Hello World" -> "HELLO_WORLD"
+//		"!" -> ""
+func UpperSnakeCase(str string) string {
+	return strings.ToUpper(SnakeCase(str))
+}
