@@ -137,3 +137,68 @@ func SnakeCase(str string) string {
 func UpperSnakeCase(str string) string {
 	return strings.ToUpper(SnakeCase(str))
 }
+
+// Before returns the string before the first occurrence of ch.
+//
+//	Example:
+//		Before("no-separator", "-") -> "no"
+func Before(str, ch string) string {
+	if str == "" || ch == "" {
+		return str
+	}
+
+	idx := strings.Index(str, ch)
+	if idx == -1 {
+		return str
+	}
+	return str[:idx]
+}
+
+// BeforeLast returns the string before the last occurrence of ch.
+//
+//	Example:
+//		BeforeLast("abcabc", "c") -> "abcab"
+func BeforeLast(str, ch string) string {
+	if str == "" || ch == "" {
+		return str
+	}
+
+	idx := strings.LastIndex(str, ch)
+	if idx == -1 {
+		return str
+	}
+	return str[:idx]
+}
+
+// After returns the substring after the first occurrence of a specified string in the source string
+//
+//	Example:
+//		After("hello world", "o") -> " world"
+func After(str, ch string) string {
+	if str == "" || ch == "" {
+		return str
+	}
+
+	idx := strings.Index(str, ch)
+	if idx == -1 {
+		return str
+	}
+	return str[idx+len(ch):]
+}
+
+// AfterLast returns the substring after the last occurrence of a specified string
+// in the source string
+//
+//	Example:
+//		AfterLast("hello world", "o") -> "rld"
+func AfterLast(str, ch string) string {
+	if str == "" || ch == "" {
+		return str
+	}
+
+	idx := strings.LastIndex(str, ch)
+	if idx == -1 {
+		return str
+	}
+	return str[idx+len(ch):]
+}

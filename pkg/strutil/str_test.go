@@ -292,3 +292,105 @@ func TestUpperSnakeCase(t *testing.T) {
 		}
 	}
 }
+
+func TestBefore(t *testing.T) {
+	tests := []struct {
+		input    string
+		sep      string
+		expected string
+	}{
+		{"hello,world", ",", "hello"},
+		{"GoLang is fun", " ", "GoLang"},
+		{"no-separator", "-", "no"},
+		{"", ",", ""},
+
+		{"你好,世界", ",", "你好"},
+		{"中文编程,测试", ",", "中文编程"},
+
+		{"Hello-kyden", "kyden", "Hello-"},
+		{"Hello-kyden", "", "Hello-kyden"},
+	}
+
+	for _, test := range tests {
+		result := Before(test.input, test.sep)
+		if result != test.expected {
+			t.Errorf("Before(%q, %q) = %q; expected %q", test.input, test.sep, result, test.expected)
+		}
+	}
+}
+
+func TestBeforeLast(t *testing.T) {
+	tests := []struct {
+		input    string
+		ch       string
+		expected string
+	}{
+		{"hello world", " ", "hello"},
+		{"hello", "l", "hel"},
+		{"hello", "o", "hell"},
+
+		{"hello", "z", "hello"},
+		{"", "a", ""},
+		{"hello", "", "hello"},
+
+		{"abcabc", "c", "abcab"},
+		{"abcabc", "b", "abca"},
+		{"abcabc", "a", "abc"},
+
+		{"abcabc", "d", "abcabc"},
+	}
+
+	for _, test := range tests {
+		result := BeforeLast(test.input, test.ch)
+		if result != test.expected {
+			t.Errorf("BeforeLast(%q, %q) = %q; expected %q", test.input, test.ch, result, test.expected)
+		}
+	}
+}
+
+func TestAfter(t *testing.T) {
+	tests := []struct {
+		str      string
+		ch       string
+		expected string
+	}{
+		{"hello world", " ", "world"},
+		{"hello world", "o", " world"},
+		{"hello world", "z", "hello world"},
+
+		{"", " ", ""},
+		{"hello", "", "hello"},
+		{"", "", ""},
+	}
+
+	for _, test := range tests {
+		result := After(test.str, test.ch)
+		if result != test.expected {
+			t.Errorf("After(%q, %q) = %q; expected %q", test.str, test.ch, result, test.expected)
+		}
+	}
+}
+
+func TestAfterLast(t *testing.T) {
+	tests := []struct {
+		str      string
+		ch       string
+		expected string
+	}{
+		{"hello world", " ", "world"},
+		{"hello world", "o", "rld"},
+		{"hello world", "z", "hello world"},
+
+		{"", " ", ""},
+		{"hello", "", "hello"},
+
+		{"hello world hello", "o", ""},
+	}
+
+	for _, test := range tests {
+		result := AfterLast(test.str, test.ch)
+		if result != test.expected {
+			t.Errorf("AfterLast(%q, %q) = %q; expected %q", test.str, test.ch, result, test.expected)
+		}
+	}
+}
