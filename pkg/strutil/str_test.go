@@ -1,6 +1,7 @@
 package strutil
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -493,6 +494,123 @@ func TestUnWarp(t *testing.T) {
 		result := UnWarp(test.input, test.sWarp)
 		if result != test.expected {
 			t.Errorf("UnWarp(%q, %q) = %q; expected %q", test.input, test.sWarp, result, test.expected)
+		}
+	}
+}
+
+func TestSubString(t *testing.T) {
+	tests := []struct {
+		src    string
+		begin  int
+		size   int
+		result string
+	}{
+		{"hello", 0, 2, "he"},
+		{"hello", 1, 3, "ell"},
+		{"hello", 4, 1, "o"},
+		{"hello", 5, 1, ""},
+		{"hello", -1, 2, "o"},
+		{"hello", -5, 2, "he"},
+		{"hello", 0, 10, "hello"},
+		{"你好世界", 1, 2, "好世"},
+		{"你好世界", -2, 2, "世界"},
+		{"你好世界", 3, 0, ""},
+		{"你好世界", 0, -1, ""},
+		{"\x00你好世界\x00", 2, 3, "好世界"},
+	}
+
+	for _, test := range tests {
+		result := SubString(test.src, test.begin, test.size)
+		if result != test.result {
+			t.Errorf("SubString(%q, %d, %d) = %q; expected %q", test.src, test.begin, test.size, result, test.result)
+		}
+	}
+}
+
+func TestRemoveNonPrintable(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"Hello, World!", "Hello, World!"},
+		{"こんにちは", "こんにちは"},
+
+		{"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F", ""},
+		{"\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F", ""},
+		{"\x7F", ""},
+
+		{"Hello\x00World", "HelloWorld"},
+		{"\u00A0\u00A1\u00A2", "\u00A1\u00A2"},
+	}
+
+	for _, test := range tests {
+		result := RemoveNonPrintable(test.input)
+		if result != test.expected {
+			t.Errorf("RemoveNonPrintable(%q) = %q; expected %q", test.input, result, test.expected)
+		}
+	}
+}
+
+func TestStringToBytes(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected []byte
+	}{
+		{"hello", []byte("hello")},
+		{"world", []byte("world")},
+		{"", []byte("")},
+		{"你好", []byte("你好")},
+	}
+
+	for _, test := range tests {
+		result := StringToBytes(test.input)
+		if !bytes.Equal(result, test.expected) {
+			t.Errorf("StringToBytes(%q) = %v; expected %v", test.input, result, test.expected)
+		}
+	}
+}
+
+func TestBytesToString(t *testing.T) {
+	tests := []struct {
+		input    []byte
+		expected string
+	}{
+		{[]byte("hello"), "hello"},
+		{[]byte("world"), "world"},
+		{[]byte(""), ""},
+		{[]byte("你好"), "你好"},
+	}
+
+	for _, test := range tests {
+		result := BytesToString(test.input)
+		if result != test.expected {
+			t.Errorf("BytesToString(%v) = %q; expected %q", test.input, result, test.expected)
+		}
+	}
+}
+
+func TestIsSpace(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{"", true},
+		{" ", true},
+		{"\t", true},
+		{"\n", true},
+		{"\r", true},
+		{" \t\n\r", true},
+		{"hello", false},
+		{"你好", false},
+		{"123", false},
+		{"!@#", false},
+		{"你好 世界", false},
+	}
+
+	for _, test := range tests {
+		result := IsSpace(test.input)
+		if result != test.expected {
+			t.Errorf("IsSpace(%q) = %v; expected %v", test.input, result, test.expected)
 		}
 	}
 }

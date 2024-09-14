@@ -14,6 +14,7 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+	"unsafe"
 )
 
 // CamelCase converts string to camelCase string.
@@ -253,4 +254,65 @@ func UnWarp(str, sWarp string) string {
 	}
 
 	return str[len(sWarp) : len(str)-len(sWarp)]
+}
+
+// SubString returns a substring of the specified size from begin.
+func SubString(src string, begin int, size int) string {
+	vr := []rune(src)
+
+	if begin < 0 {
+		begin += len(vr)
+		if begin < 0 {
+			begin = 0
+		}
+	}
+	if begin > len(vr) || size <= 0 {
+		return ""
+	}
+
+	if size > len(vr)-begin {
+		size = len(vr) - begin
+	}
+
+	str := string(vr[begin : begin+size])
+	return strings.Replace(str, "\x00", "", -1)
+}
+
+// RemoveNonPrintable removes all non-printable characters from the string.
+func RemoveNonPrintable(str string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsPrint(r) {
+			return r
+		}
+		return -1
+	}, str)
+}
+
+// StringToBytes converts the string to byte slice without memory alloc.
+func StringToBytes(str string) []byte {
+	return *(*[]byte)(unsafe.Pointer(&str))
+}
+
+// BytesToString converts the byte slice to string without memory alloc.
+func BytesToString(bs []byte) string {
+	return *(*string)(unsafe.Pointer(&bs))
+}
+
+// IsSpace checks if the string is whitespace, empty or not.
+//
+//	Example:
+//		"" -> true
+//		" \t\n\r" -> true
+func IsSpace(str string) bool {
+	if len(str) == 0 {
+		return true
+	}
+
+	for _, r := range str {
+		if !unicode.IsSpace(r) {
+			return false
+		}
+	}
+
+	return true
 }
