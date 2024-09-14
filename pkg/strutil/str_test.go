@@ -693,3 +693,56 @@ func TestHasSuffixAny(t *testing.T) {
 		}
 	}
 }
+
+func TestIndexOffset(t *testing.T) {
+	tests := []struct {
+		str      string
+		substr   string
+		offset   int
+		expected int
+	}{
+		{"hello world", "world", 6, 6},
+		{"hello world", "o", 7, 7},
+		{"hello world", "l", 3, 3},
+		{"hello world", "z", 0, -1},
+		{"hello world", "o", 11, -1},
+		{"hello world", "", 0, 0},
+		{"", "a", 0, -1},
+		{"hello world", "world", -1, -1},
+		{"hello world", "world", 11, -1},
+	}
+
+	for _, test := range tests {
+		result := IndexOffset(test.str, test.substr, test.offset)
+		if result != test.expected {
+			t.Errorf("IndexOffset(%q, %q, %d) = %d; expected %d", test.str, test.substr, test.offset, result, test.expected)
+		}
+	}
+}
+
+func TestReplaceWithMap(t *testing.T) {
+	tests := []struct {
+		str        string
+		replaceMap map[string]string
+		expected   string
+	}{
+		{"hello world", map[string]string{"hello": "hi"}, "hi world"},
+		{"Hello World", map[string]string{"World": "Go"}, "Hello Go"},
+		{"hello-world", map[string]string{"-": "_"}, "hello_world"},
+		{"hello_world", map[string]string{"_": "-"}, "hello-world"},
+
+		{"", map[string]string{"a": "b"}, ""},
+
+		{"abc", map[string]string{"a": "A", "b": "B", "c": "C"}, "ABC"},
+		{"你好世界", map[string]string{"你好": "Hello"}, "Hello世界"},
+		{"你好，世界！", map[string]string{"！": "?"}, "你好，世界?"},
+		{"你好，世界！", map[string]string{"！": "？"}, "你好，世界？"},
+	}
+
+	for _, test := range tests {
+		result := ReplaceWithMap(test.str, test.replaceMap)
+		if result != test.expected {
+			t.Errorf("ReplaceWithMap(%q, %v) = %q; expected %q", test.str, test.replaceMap, result, test.expected)
+		}
+	}
+}

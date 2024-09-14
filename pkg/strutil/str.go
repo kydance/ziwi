@@ -351,3 +351,22 @@ func HasSuffixAny(str string, suffixs ...string) bool {
 
 	return false
 }
+
+// IndexOffset return the index of the first occurrence of the substring
+// in the string after offset, or -1 if not found.
+func IndexOffset(str, substr string, offset int) int {
+	if offset > len(str)-1 || offset < 0 {
+		return -1
+	}
+
+	return strings.Index(str[offset:], substr) + offset
+}
+
+// ReplaceWithMap returns a copy of `str`,
+// which is replaced by a map in unordered way, case-sensitively.
+func ReplaceWithMap(str string, replaceMap map[string]string) string {
+	for k, v := range replaceMap {
+		str = strings.ReplaceAll(str, k, v)
+	}
+	return str
+}
