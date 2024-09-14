@@ -202,3 +202,55 @@ func AfterLast(str, ch string) string {
 	}
 	return str[idx+len(ch):]
 }
+
+// IsString checks if the val data type is string or not.
+func IsString(val any) bool {
+	_, ok := val.(string)
+	return ok
+}
+
+// Reverse reverses the string.
+func Reverse(str string) string {
+	vr := []rune(str)
+
+	for i, j := 0, len(vr)-1; i < len(vr)/2; i, j = i+1, j-1 {
+		vr[i], vr[j] = vr[j], vr[i]
+	}
+
+	return string(vr)
+}
+
+// Warp wraps the string with the given string.
+//
+//	Example:
+//		Warp("hello", "*") -> "*hello*"
+func Warp(str, sWarp string) string {
+	if str == "" || sWarp == "" {
+		return str
+	}
+
+	var sb strings.Builder
+
+	sb.WriteString(sWarp)
+	sb.WriteString(str)
+	sb.WriteString(sWarp)
+
+	return sb.String()
+}
+
+// UnWarp unwraps the string with the given string.
+//
+//	Example:
+//		UnWarp("*hello*", "*") -> "hello"
+//		UnWarp("abcdefabc", "abc") -> "def"
+func UnWarp(str, sWarp string) string {
+	if str == "" || sWarp == "" {
+		return str
+	}
+
+	if !strings.HasPrefix(str, sWarp) || !strings.HasSuffix(str, sWarp) {
+		return str
+	}
+
+	return str[len(sWarp) : len(str)-len(sWarp)]
+}

@@ -394,3 +394,105 @@ func TestAfterLast(t *testing.T) {
 		}
 	}
 }
+
+func TestIsString(t *testing.T) {
+	tests := []struct {
+		input    any
+		expected bool
+	}{
+		{nil, false},
+		{"hello", true},
+		{123, false},
+		{true, false},
+		{nil, false},
+		{[]int{}, false},
+		{map[string]int{}, false},
+		{"你好", true},
+		{complex(1, 2), false},
+	}
+
+	for _, test := range tests {
+		result := IsString(test.input)
+		if result != test.expected {
+			t.Errorf("IsString(%v) = %v; expected %v", test.input, result, test.expected)
+		}
+	}
+}
+
+func TestReverse(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"hello", "olleh"},
+		{"world", "dlrow"},
+		{"GoLang", "gnaLoG"},
+
+		{"", ""},
+		{"h", "h"},
+		{"H", "H"},
+
+		{"123", "321"},
+		{"!@#", "#@!"},
+		{"你好", "好你"},
+		{"你好世界", "界世好你"},
+		{"你好，世界！", "！界世，好你"},
+		{"中文编程", "程编文中"},
+	}
+
+	for _, test := range tests {
+		result := Reverse(test.input)
+		if result != test.expected {
+			t.Errorf("Reverse(%q) = %q; expected %q", test.input, result, test.expected)
+		}
+	}
+}
+
+func TestWarp(t *testing.T) {
+	tests := []struct {
+		str      string
+		sWarp    string
+		expected string
+	}{
+		{"hello", "!", "!hello!"},
+		{"world", "*", "*world*"},
+		{"Go", "-", "-Go-"},
+		{"", "#", ""},
+		{"你好", "@", "@你好@"},
+		{"hello", "", "hello"},
+		{"", "!", ""},
+	}
+
+	for _, test := range tests {
+		result := Warp(test.str, test.sWarp)
+		if result != test.expected {
+			t.Errorf("Warp(%q, %q) = %q; expected %q", test.str, test.sWarp, result, test.expected)
+		}
+	}
+}
+
+func TestUnWarp(t *testing.T) {
+	tests := []struct {
+		input    string
+		sWarp    string
+		expected string
+	}{
+		{"hello", "", "hello"},
+		{"", "world", ""},
+
+		{"hello", "world", "hello"},
+		{"helloworld", "world", "helloworld"},
+		{"worldhello", "world", "worldhello"},
+
+		{"helloworldworld", "world", "helloworldworld"},
+		{"abcabc", "abc", ""},
+		{"abcdefabc", "abc", "def"},
+	}
+
+	for _, test := range tests {
+		result := UnWarp(test.input, test.sWarp)
+		if result != test.expected {
+			t.Errorf("UnWarp(%q, %q) = %q; expected %q", test.input, test.sWarp, result, test.expected)
+		}
+	}
+}
