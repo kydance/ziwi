@@ -316,3 +316,38 @@ func IsSpace(str string) bool {
 
 	return true
 }
+
+// IsNotSpace checks if the string is not whitespace, empty or not.
+func IsNotSpace(str string) bool {
+	return !IsSpace(str)
+}
+
+// HasPrefixAny checks if the string has any of the given prefixes.
+func HasPrefixAny(str string, prefixs ...string) bool {
+	if len(str) == 0 || len(prefixs) == 0 {
+		return false
+	}
+
+	for _, prefix := range prefixs {
+		if strings.HasPrefix(str, prefix) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// HasSuffixAny checks if the string has any of the given suffixes.
+func HasSuffixAny(str string, suffixs ...string) bool {
+	if len(str) == 0 || len(suffixs) == 0 {
+		return false
+	}
+
+	for _, suffix := range suffixs {
+		if strings.HasSuffix(str, suffix) {
+			return true
+		}
+	}
+
+	return false
+}

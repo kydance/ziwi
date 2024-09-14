@@ -614,3 +614,82 @@ func TestIsSpace(t *testing.T) {
 		}
 	}
 }
+
+func TestIsNotSpace(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{" ", false},
+		{"\t", false},
+		{"\n", false},
+		{"hello", true},
+		{"你好", true},
+		{" 你好 ", true},
+		{"\t你好\n", true},
+		{"", false},
+	}
+
+	for _, test := range tests {
+		result := IsNotSpace(test.input)
+		if result != test.expected {
+			t.Errorf("IsNotSpace(%q) = %v; expected %v", test.input, result, test.expected)
+		}
+	}
+}
+
+func TestHasPrefixAny(t *testing.T) {
+	tests := []struct {
+		str      string
+		prefixs  []string
+		expected bool
+	}{
+		{"hello", []string{"he", "ha"}, true},
+		{"world", []string{"wo", "wa"}, true},
+		{"GoLang", []string{"Go", "GoL"}, true},
+
+		{"", []string{"a", "b"}, false},
+		{"h", []string{}, false},
+
+		{"H", []string{"h"}, false},
+		{"123", []string{"12", "123"}, true},
+		{"!@#", []string{"!@", "!#"}, true},
+		{"你好", []string{"你", "好"}, true},
+		{"你好世界", []string{"你好", "好世"}, true},
+	}
+
+	for _, test := range tests {
+		result := HasPrefixAny(test.str, test.prefixs...)
+		if result != test.expected {
+			t.Errorf("HasPrefixAny(%q, %v) = %v; expected %v", test.str, test.prefixs, result, test.expected)
+		}
+	}
+}
+
+func TestHasSuffixAny(t *testing.T) {
+	tests := []struct {
+		str      string
+		suffixs  []string
+		expected bool
+	}{
+		{"hello", []string{"lo", "he"}, true},
+		{"world", []string{"ld", "wo"}, true},
+		{"GoLang", []string{"g", "Lang"}, true},
+
+		{"", []string{"a", "b"}, false},
+		{"h", []string{}, false},
+
+		{"H", []string{"h"}, false},
+		{"123", []string{"23", "123"}, true},
+		{"!@#", []string{"#@", "!#"}, false},
+		{"你好", []string{"好", "你"}, true},
+		{"你好世界", []string{"世界", "好世"}, true},
+	}
+
+	for _, test := range tests {
+		result := HasSuffixAny(test.str, test.suffixs...)
+		if result != test.expected {
+			t.Errorf("HasSuffixAny(%q, %v) = %v; expected %v", test.str, test.suffixs, result, test.expected)
+		}
+	}
+}
