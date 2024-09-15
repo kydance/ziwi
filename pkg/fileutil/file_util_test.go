@@ -4,10 +4,12 @@ import (
 	"archive/zip"
 	"errors"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestNewFileReader(t *testing.T) {
@@ -853,6 +855,296 @@ func TestFileMode(t *testing.T) {
 			}
 			if mode != tt.expected {
 				t.Errorf("FileMode() got = %v, want %v", mode, tt.expected)
+			}
+		})
+	}
+}
+
+func TestCurrPath(t *testing.T) {
+	path := CurrPath()
+
+	if path == "" {
+		t.Error("CurrPath() returned an empty string")
+	}
+
+	// Check if the path exists
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		t.Errorf("Path returned by CurrPath() does not exist: %s", path)
+	}
+
+	t.Log(path)
+}
+
+func TestMiMeType(t *testing.T) {
+	// Test case 1: Valid file path
+	filePath := "test_data/test_1.txt"
+	expectedMimeType := "application/octet-stream"
+	mimeType := MiMeType(filePath)
+	if mimeType != expectedMimeType {
+		t.Errorf("MiMeType() = %v, want %v", mimeType, expectedMimeType)
+	}
+
+	// Test case 2: Invalid file path
+	invalidFilePath := "nonexistent.txt"
+	mimeType = MiMeType(invalidFilePath)
+	if mimeType != "" {
+		t.Errorf("MiMeType() = %v, want ''", mimeType)
+	}
+
+	// Test case 3: Valid *os.File
+	file, err := os.Open(filePath)
+	if err != nil {
+		t.Fatalf("Failed to open file: %v", err)
+	}
+	defer file.Close()
+	mimeType = MiMeType(file)
+	if mimeType != expectedMimeType {
+		t.Errorf("MiMeType() = %v, want %v", mimeType, expectedMimeType)
+	}
+
+	// Test case 5: Empty file
+	emptyFile, err := os.CreateTemp("", "empty.txt")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(emptyFile.Name())
+	emptyFile.Close()
+
+	mimeType = MiMeType(emptyFile.Name())
+	if mimeType != "" {
+		t.Errorf("MiMeType() = %v, want ''", mimeType)
+	}
+}
+
+func TestFileSize(t *testing.T) {
+	// Test case 1: Valid file path
+	filePath := "test_data/test_1.txt"
+	expectedSize := int64(109)
+	size, err := FileSize(filePath)
+	if err != nil {
+		t.Errorf("fileSize() error = %v", err)
+		return
+	}
+	if size != expectedSize {
+		t.Errorf("fileSize() = %v, want %v", size, expectedSize)
+	}
+
+	// Test case 2: Invalid file path
+	invalidFilePath := "nonexistent.txt"
+	_, err = FileSize(invalidFilePath)
+	if err == nil {
+		t.Error("fileSize() expected error, got nil")
+		return
+	}
+}
+
+func TestDirSize(t *testing.T) {
+	// Create a temporary directory for testing
+	tempDir, err := os.MkdirTemp("", "dirsize_test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create test files and directories
+	createTestFile := func(name string, size int64) error {
+		filePath := filepath.Join(tempDir, name)
+		f, err := os.Create(filePath)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		if _, err := f.Write(make([]byte, size)); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if err := createTestFile("file1.txt", 10); err != nil {
+		t.Fatal(err)
+	}
+	if err := createTestFile("file2.txt", 25); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(filepath.Join(tempDir, "subdir"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := createTestFile("subdir/file3.txt", 15); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := createTestFile("empty", 0); err != nil {
+		t.Fatal(err)
+	}
+
+	// Test cases
+	tests := []struct {
+		name     string
+		dir      string
+		expected int64
+		hasError bool
+	}{
+		{"Valid directory", tempDir, 50, false},
+		{"Empty directory", filepath.Join(tempDir, "empty"), 0, false},
+		{"Non-existent directory", filepath.Join(tempDir, "nonexistent"), 0, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			size, err := DirSize(tt.dir)
+			if (err != nil) != tt.hasError {
+				t.Errorf("DirSize() error = %v, hasError %v", err, tt.hasError)
+				return
+			}
+			if size != tt.expected {
+				t.Errorf("DirSize() got = %v, want %v", size, tt.expected)
+			}
+		})
+	}
+}
+
+func TestDirSize_PermissionError(t *testing.T) {
+	// Create a temporary directory for testing
+	tempDir, err := os.MkdirTemp("", "dirsize_perm_test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create a subdirectory with no read permissions
+	subdir := filepath.Join(tempDir, "inaccessible")
+	if err := os.Mkdir(subdir, 0000); err != nil {
+		t.Fatal(err)
+	}
+
+	// Try to get the directory size
+	_, err = DirSize(tempDir)
+	if err == nil {
+		t.Error("DirSize() expected error for inaccessible directory, got nil")
+	} else if !errors.Is(err, fs.ErrPermission) {
+		t.Errorf("Expected permission error, got: %v", err)
+	}
+}
+
+func TestMTime(t *testing.T) {
+	// Test case 1: Valid file path
+	filePath := "test_data/test_1.txt"
+	mtime, err := MTime(filePath)
+	if err != nil {
+		t.Errorf("MTime() error = %v", err)
+		return
+	}
+	if mtime <= 0 {
+		t.Errorf("MTime() returned invalid timestamp: %v", mtime)
+	}
+
+	// Test case 2: Invalid file path
+	invalidFilePath := "nonexistent.txt"
+	_, err = MTime(invalidFilePath)
+	if err == nil {
+		t.Error("MTime() expected error, got nil")
+		return
+	}
+
+	// Test case 3: Compare with file info
+	tempFile, err := os.CreateTemp("", "mtime_test")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(tempFile.Name())
+	tempFile.Close()
+
+	fileInfo, err := os.Stat(tempFile.Name())
+	if err != nil {
+		t.Fatalf("Failed to get file info: %v", err)
+	}
+
+	mtime, err = MTime(tempFile.Name())
+	if err != nil {
+		t.Errorf("MTime() error = %v", err)
+		return
+	}
+
+	if mtime != fileInfo.ModTime().Unix() {
+		t.Errorf("MTime() returned different timestamp than file info")
+	}
+
+	// Test case 4: File modified time changes
+	time.Sleep(2 * time.Second) // Wait for file system timestamp resolution
+	os.Chtimes(tempFile.Name(), time.Now(), time.Now())
+
+	mtime2, err := MTime(tempFile.Name())
+	if err != nil {
+		t.Errorf("MTime() error = %v", err)
+		return
+	}
+
+	if mtime2 <= mtime {
+		t.Errorf("MTime() did not reflect file modification time change")
+	}
+}
+
+func TestSHA(t *testing.T) {
+	tests := []struct {
+		name     string
+		filename string
+		shaType  int
+		want     string
+		wantErr  bool
+	}{
+		{
+			name:     "SHA1_Success",
+			filename: "test_data/test_1.txt",
+			shaType:  1,
+			want:     "68b6bcb45c3ce3f8c9d335f9da399c206857857c",
+			wantErr:  false,
+		},
+		{
+			name:     "SHA256_Success",
+			filename: "test_data/test_1.txt",
+			shaType:  256,
+			want:     "c318de96d9bfcf31bff7a71c4679768b1270b8868011cb7636162d29e7cc0621",
+			wantErr:  false,
+		},
+		{
+			name:     "SHA512_Success",
+			filename: "test_data/test_1.txt",
+			shaType:  512,
+			want:     "d3675f4aca9c33c4d3126d893bbfdf66e03b3d2c9379f25b3a5ec15b92ac76610f5a76b764adbdbd794cfd4b70b71099d3ffeae6bb615c1b8c301c8416997bcd",
+			wantErr:  false,
+		},
+		{
+			name:     "SHA1_Default",
+			filename: "test_data/test_1.txt",
+			shaType:  0, // Default should be SHA1
+			want:     "",
+			wantErr:  true,
+		},
+		{
+			name:     "Invalid_SHAType",
+			filename: "test_data/test_1.txt",
+			shaType:  999,
+			want:     "",
+			wantErr:  true,
+		},
+		{
+			name:     "File_Not_Found",
+			filename: "nonexistent.txt",
+			shaType:  1,
+			want:     "",
+			wantErr:  true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := SHA(tt.filename, tt.shaType)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SHA() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("SHA() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

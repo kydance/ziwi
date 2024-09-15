@@ -14,11 +14,20 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
+
+	// #nosec
+	"crypto/sha1"
+
+	"crypto/sha256"
+	"crypto/sha512"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 // FileReader is a wrapper of bufio.Reader,
@@ -411,4 +420,131 @@ func FileMode(file string) (os.FileMode, error) {
 	}
 
 	return fi.Mode(), nil
+}
+
+// CurrPath return current absolute path.
+func CurrPath() string {
+	_, filename, _, ok := runtime.Caller(1)
+	if ok {
+		return filepath.Dir(filename)
+	}
+
+	return ""
+}
+
+// MiMeType returns file mime type of the specified file.
+func MiMeType[T string | *os.File](file T) string {
+	var mediatype string
+
+	readBuffer := func(f *os.File) ([]byte, error) {
+		buffer := make([]byte, 512)
+		_, err := f.Read(buffer)
+		if err != nil {
+			return nil, err
+		}
+		return buffer, nil
+	}
+
+	switch fp := any(file).(type) {
+	case string:
+		f, err := os.Open(fp)
+		if err != nil {
+			return mediatype
+		}
+		buffer, err := readBuffer(f)
+		if err != nil {
+			return mediatype
+		}
+		return http.DetectContentType(buffer)
+	case *os.File:
+		buffer, err := readBuffer(fp)
+		if err != nil {
+			return mediatype
+		}
+		return http.DetectContentType(buffer)
+	}
+
+	return mediatype
+}
+
+// FileSize returns the given file size in bytes.
+func FileSize(file string) (int64, error) {
+	f, err := os.Stat(file)
+	if err != nil {
+		return 0, err
+	}
+
+	return f.Size(), nil
+}
+
+// DirSize walks the folder recusively and returns folder size in bytes.
+func DirSize(dir string) (int64, error) {
+	var size int64
+
+	err := filepath.WalkDir(dir, func(_ string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !d.IsDir() {
+			info, err := d.Info()
+			if err != nil {
+				return err
+			}
+
+			size += info.Size()
+		}
+		return err
+	})
+	return size, err
+}
+
+// MTime return file modified time (Uinx timestamp).
+func MTime(file string) (int64, error) {
+	f, err := os.Stat(file)
+	if err != nil {
+		return 0, err
+	}
+
+	return f.ModTime().Unix(), nil
+}
+
+// SHA returns file SHA value.
+//
+//	SHATpye: [1, 256, 512]
+func SHA(file string, SHAType ...int) (string, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	var h hash.Hash
+	if len(SHAType) > 0 {
+		switch SHAType[0] {
+		case 1:
+			// FIXME G401: Use of weak cryptographic primitive
+			// #nosec
+			h = sha1.New()
+
+		case 256:
+			h = sha256.New()
+
+		case 512:
+			h = sha512.New()
+		default:
+			return "", errors.New("param `SHAType` should be 1, 256 or 512")
+		}
+	} else {
+		// FIXME G401: Use of weak cryptographic primitive
+		// #nosec
+		h = sha1.New()
+	}
+
+	_, err = io.Copy(h, f)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
