@@ -299,3 +299,205 @@ func TestCreateDir(t *testing.T) {
 		t.Errorf("Expected error for invalid path, got nil")
 	}
 }
+
+func TestCopyFile(t *testing.T) {
+	src := "src.txt"
+	dst := "dst.txt"
+
+	// Create a source file with test data
+	testData := []byte("Hello, World!")
+	if err := os.WriteFile(src, testData, 0644); err != nil {
+		t.Fatalf("Failed to create source file: %v", err)
+	}
+	defer os.Remove(src)
+
+	// Ensure the destination file does not exist before the test
+	if IsExist(dst) {
+		t.Fatalf("Destination file should not exist before the test")
+	}
+
+	// Perform the copy operation
+	if err := CopyFile(dst, src); err != nil {
+		t.Fatalf("CopyFile failed: %v", err)
+	}
+
+	// Verify the destination file has been created and contains the correct data
+	dstData, err := os.ReadFile(dst)
+	if err != nil {
+		t.Fatalf("Failed to read destination file: %v", err)
+	}
+	if string(dstData) != string(testData) {
+		t.Errorf("Data mismatch, Expected: %q, Got: %q", string(testData), string(dstData))
+	}
+
+	// Clean up the destination file
+	if err := os.Remove(dst); err != nil {
+		t.Fatalf("Failed to remove destination file: %v", err)
+	}
+}
+
+func TestCopyDir(t *testing.T) {
+	src := "src"
+	dst := "dst"
+
+	// Create source directory and files
+	err := os.MkdirAll(src+"/subdir", 0775)
+	if err != nil {
+		t.Fatalf("Failed to create source directory: %v", err)
+	}
+	err = os.WriteFile(src+"/file1.txt", []byte("Hello, World!"), 0644)
+	if err != nil {
+		t.Fatalf("Failed to create source file: %v", err)
+	}
+	err = os.WriteFile(src+"/subdir/file2.txt", []byte("Another test"), 0644)
+	if err != nil {
+		t.Fatalf("Failed to create source file: %v", err)
+	}
+
+	// Test copy
+	err = CopyDir(dst, src)
+	if err != nil {
+		t.Fatalf("CopyDir failed: %v", err)
+	}
+
+	// Check if files and directories are copied
+	entries, err := os.ReadDir(dst)
+	if err != nil {
+		t.Fatalf("Failed to read destination directory: %v", err)
+	}
+	if len(entries) != 2 {
+		t.Errorf("Expected 2 entries in destination, got %d", len(entries))
+	}
+
+	// Check files content
+	content1, err := os.ReadFile(dst + "/file1.txt")
+	if err != nil {
+		t.Fatalf("Failed to read file: %v", err)
+	}
+	if string(content1) != "Hello, World!" {
+		t.Errorf("Expected 'Hello, World!', got '%s'", string(content1))
+	}
+
+	content2, err := os.ReadFile(dst + "/subdir/file2.txt")
+	if err != nil {
+		t.Fatalf("Failed to read file: %v", err)
+	}
+	if string(content2) != "Another test" {
+		t.Errorf("Expected 'Another test', got '%s'", string(content2))
+	}
+
+	// Clean up
+	os.RemoveAll(src)
+	os.RemoveAll(dst)
+}
+
+func TestCopyDirFailure(t *testing.T) {
+	src := "src"
+	dst := "/root"
+
+	// Create source directory
+	err := os.MkdirAll(src, 0775)
+	if err != nil {
+		t.Fatalf("Failed to create source directory: %v", err)
+	}
+
+	// Test copy to non-writable destination
+	err = CopyDir(dst, src)
+	if err == nil {
+		t.Error("Expected error when copying to non-writable directory, got nil")
+	}
+
+	// Clean up
+	os.RemoveAll(src)
+}
+
+func TestIsDir(t *testing.T) {
+	// Test case 1: Directory exists
+	dirPath := "/tmp"
+	if !IsDir(dirPath) {
+		t.Errorf("Expected %s to be a directory", dirPath)
+	}
+
+	// Test case 2: File exists but is not a directory
+	tempFile, err := os.CreateTemp("", "testfile")
+	if err != nil {
+		t.Fatalf("Create temp file failed: %v", err)
+	}
+	defer os.Remove(tempFile.Name())
+	defer tempFile.Close()
+
+	if IsDir(tempFile.Name()) {
+		t.Errorf("Expected %s to be a file, not a directory", tempFile.Name())
+	}
+
+	// Test case 3: Path does not exist
+	nonExistentPath := "/nonexistent/path"
+	if IsDir(nonExistentPath) {
+		t.Errorf("Expected %s to not exist", nonExistentPath)
+	}
+}
+
+func TestRemoveFile(t *testing.T) {
+	// Create a temporary file for testing
+	tempFile, err := os.CreateTemp("", "testfile")
+	if err != nil {
+		t.Fatalf("Create temp file failed: %v", err)
+	}
+	defer os.Remove(tempFile.Name())
+
+	// Ensure the file exists before attempting to remove it
+	if _, err := os.Stat(tempFile.Name()); os.IsNotExist(err) {
+		t.Fatalf("File does not exist: %s", tempFile.Name())
+	}
+
+	// Test removing the file
+	if err := RemoveFile(tempFile.Name()); err != nil {
+		t.Errorf("RemoveFile failed: %v", err)
+	}
+
+	// Ensure the file no longer exists after removal
+	if _, err := os.Stat(tempFile.Name()); !os.IsNotExist(err) {
+		t.Errorf("File still exists after removal: %s", tempFile.Name())
+	}
+}
+
+func TestClearFile(t *testing.T) {
+	// Create a temporary file with some content
+	tempFile, err := os.CreateTemp("", "testfile")
+	if err != nil {
+		t.Fatalf("Create temp file failed: %v", err)
+	}
+	defer os.Remove(tempFile.Name())
+
+	testData := []byte("Hello, World!")
+	if _, err := tempFile.Write(testData); err != nil {
+		t.Fatalf("Write temp file failed: %v", err)
+	}
+	if err := tempFile.Close(); err != nil {
+		t.Fatalf("Close temp file failed: %v", err)
+	}
+
+	// Clear the file
+	err = ClearFile(tempFile.Name())
+	if err != nil {
+		t.Fatalf("ClearFile failed: %v", err)
+	}
+
+	// Check if the file is empty
+	fileInfo, err := os.Stat(tempFile.Name())
+	if err != nil {
+		t.Fatalf("Stat file failed: %v", err)
+	}
+	if fileInfo.Size() != 0 {
+		t.Errorf("Expected file size to be 0, got: %d", fileInfo.Size())
+	}
+
+	// Try to read the file content
+	content, err := os.ReadFile(tempFile.Name())
+	if err != nil {
+		t.Fatalf("Read file failed: %v", err)
+	}
+	if len(content) != 0 {
+		t.Errorf("Expected empty content, got: %s", content)
+	}
+}

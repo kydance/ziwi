@@ -13,8 +13,10 @@ package fileutil
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 // FileReader is a wrapper of bufio.Reader,
@@ -103,4 +105,89 @@ func CreateFile(path string) bool {
 //	dir: absolute path like `/dev/null`
 func CreateDir(dir string) error {
 	return os.MkdirAll(dir, os.ModePerm)
+}
+
+// CopyFile copies a file from src to dst. Support relative / absolute path.
+func CopyFile(dst, src string) error {
+	sf, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sf.Close()
+
+	df, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer df.Close()
+
+	_, err = io.Copy(df, sf)
+	return err
+}
+
+// RemoveFile removes a specifice file.
+func RemoveFile(file string) error {
+	return os.Remove(file)
+}
+
+// ClearFile clears a file, that is, it will write an empty string to the file.
+func ClearFile(file string) error {
+	f, err := os.OpenFile(file, os.O_WRONLY|os.O_TRUNC, 0777)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.WriteString("")
+	return err
+}
+
+// CopyDir copies a directory including all subdirectories and files from src to dst recursively.
+// Support relative / absolute path. If dst does not exist, it will return error.
+func CopyDir(dst, src string) error {
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return fmt.Errorf("failed to get source directory info: %w", err)
+	}
+	if !srcInfo.IsDir() {
+		return fmt.Errorf("source is not a directory: %s", src)
+	}
+
+	err = os.MkdirAll(dst, 0775)
+	if err != nil {
+		return fmt.Errorf("failed to create destination directory: %w", err)
+	}
+
+	vEntry, err := os.ReadDir(src)
+	if err != nil {
+		return fmt.Errorf("failed to read source directory: %w", err)
+	}
+
+	for _, entry := range vEntry {
+		_src := filepath.Join(src, entry.Name())
+		_dst := filepath.Join(dst, entry.Name())
+
+		if entry.IsDir() {
+			err := CopyDir(_dst, _src)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := CopyFile(_dst, _src)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// IsDir checks if a path is a directory.
+func IsDir(path string) bool {
+	f, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return f.IsDir()
 }
