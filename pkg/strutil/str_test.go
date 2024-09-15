@@ -1098,3 +1098,25 @@ func TestConcat(t *testing.T) {
 		})
 	}
 }
+
+func TestEllipsis(t *testing.T) {
+	tests := []struct {
+		str      string
+		size     int
+		expected string
+	}{
+		{"Hello, world!", 5, "Hello..."},
+		{"你好，世界！", 2, "你好..."},
+		{"", 5, ""},
+		{"Short", 10, "Short"},
+		{"Longer text to be truncated", 20, "Longer text to be tr..."},
+		{"", 0, ""},
+	}
+
+	for _, test := range tests {
+		result := Ellipsis(test.str, test.size)
+		if result != test.expected {
+			t.Errorf("Ellipsis(%q, %d) = %q; expected %q", test.str, test.size, result, test.expected)
+		}
+	}
+}

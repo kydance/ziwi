@@ -570,3 +570,18 @@ func Concat(length int, str ...string) string {
 func RegexMatchAllGroups(str, pattern string) [][]string {
 	return regexp.MustCompile(pattern).FindAllStringSubmatch(str, -1)
 }
+
+// Ellipsis returns a string with ellipsis if the string is longer than the specified size.
+func Ellipsis(str string, size int) string {
+	str = strings.TrimSpace(str)
+
+	if size <= 0 {
+		return ""
+	}
+
+	vr := []rune(str)
+	if len(vr) <= size {
+		return str
+	}
+	return string(vr[:size]) + "..."
+}
