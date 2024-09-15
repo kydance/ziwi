@@ -370,3 +370,68 @@ func ReplaceWithMap(str string, replaceMap map[string]string) string {
 	}
 	return str
 }
+
+// Trim strips whitespace (or other characters) from beginning and end of the string.
+//
+//	Example:
+//		Trim("abcHello World!cba", "abc!dEF") -> "Hello Worl"
+
+func Trim(str string, cutset ...string) string {
+	// DefaultTrimChars are the characters which are stripped by Trim* functions in default.
+	DefaultTrimChars := string([]byte{
+		'\t', // Tab.
+		'\v', // Vertical tab.
+		'\n', // New line (line feed).
+		'\r', // Carriage return.
+		'\f', // New page.
+		' ',  // Ordinary space.
+		0x00, // NUL-byte.
+		0x85, // Delete.
+		0xA0, // Non-breaking space.
+	})
+
+	if len(cutset) > 0 {
+		DefaultTrimChars += cutset[0]
+	}
+
+	return strings.Trim(str, DefaultTrimChars)
+}
+
+// SplitAndTrim splits the string by the delimeter and trims the result.
+//
+//	Example:
+//		SplitAndTrim("a,b,cHello,d,eWorld,f", ",", "abc") -> []string{"Hello", "d", "eWorld", "f"}
+func SplitAndTrim(str, delimeter string, cutset ...string) (vStr []string) {
+	temp := strings.Split(str, delimeter)
+
+	for _, v := range temp {
+		v := Trim(v, cutset...)
+		if v != "" {
+			vStr = append(vStr, v)
+		}
+	}
+
+	return
+}
+
+// HideString hides the string between beg and end with the hideChar.
+//
+//	Example:
+//		HideString({"hello world", 3, 7, "*") -> "hel****orld"
+func HideString(src string, beg, end int, hideChar string) string {
+	srcSize := len(src)
+
+	if beg > srcSize-1 || beg < 0 || end < 0 || beg > end {
+		return src
+	}
+
+	if end > srcSize {
+		end = srcSize
+	}
+
+	if hideChar == "" {
+		return src
+	}
+
+	return src[:beg] + strings.Repeat(hideChar, end-beg) + src[end:]
+}

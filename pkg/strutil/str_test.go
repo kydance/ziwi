@@ -2,6 +2,7 @@ package strutil
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 )
 
@@ -743,6 +744,78 @@ func TestReplaceWithMap(t *testing.T) {
 		result := ReplaceWithMap(test.str, test.replaceMap)
 		if result != test.expected {
 			t.Errorf("ReplaceWithMap(%q, %v) = %q; expected %q", test.str, test.replaceMap, result, test.expected)
+		}
+	}
+}
+
+func TestTrim(t *testing.T) {
+	tests := []struct {
+		input    string
+		cutset   string
+		expected string
+	}{
+		{"  hello world  ", "", "hello world"},
+		{"\t\nhello world\t\n", "", "hello world"},
+		{"abcHello World!cba", "abc!", "Hello World"},
+		{"abcHello World!cba", "abc!dEF", "Hello Worl"},
+		{"你好 世界！", "", "你好 世界！"},
+		{"你好 世界！", "你好", "世界！"},
+	}
+
+	for _, test := range tests {
+		result := Trim(test.input, test.cutset)
+		if result != test.expected {
+			t.Errorf("Trim(%q, %q) = %q; expected %q", test.input, test.cutset, result, test.expected)
+		}
+	}
+}
+
+func TestSplitAndTrim(t *testing.T) {
+	tests := []struct {
+		input     string
+		delimeter string
+		cutset    string
+		expected  []string
+	}{
+		{"hello, world, go", ",", "", []string{"hello", "world", "go"}},
+		{"  hello, world, go  ", ",", "", []string{"hello", "world", "go"}},
+		{"a,b,cHello,d,eWorld,f", ",", "abc", []string{"Hello", "d", "eWorld", "f"}},
+		{"你好,世界,Go", ",", "", []string{"你好", "世界", "Go"}},
+		{"你好,世界,Go", ",", "你好", []string{"世界", "Go"}},
+	}
+
+	for _, test := range tests {
+		result := SplitAndTrim(test.input, test.delimeter, test.cutset)
+		if !reflect.DeepEqual(result, test.expected) {
+			t.Errorf("SplitAndTrim(%q, %q, %q) = %v; expected %v", test.input, test.delimeter, test.cutset, result, test.expected)
+		}
+	}
+}
+
+func TestHideString(t *testing.T) {
+	tests := []struct {
+		src      string
+		beg      int
+		end      int
+		hideChar string
+		expected string
+	}{
+		{"hello world", 3, 7, "*", "hel****orld"},
+		{"1234567890", 1, 9, "X", "1XXXXXXXX0"},
+		{"abcdef", 0, 6, "-", "------"},
+
+		{"abc", 1, 2, "", "abc"},
+		{"abc", 3, 2, "*", "abc"},
+		{"abc", -1, 2, "*", "abc"},
+		{"abc", 2, -1, "*", "abc"},
+		{"abc", 4, 5, "*", "abc"},
+		{"", 0, 0, "*", ""},
+	}
+
+	for _, test := range tests {
+		result := HideString(test.src, test.beg, test.end, test.hideChar)
+		if result != test.expected {
+			t.Errorf("HideString(%q, %d, %d, %q) = %q; expected %q", test.src, test.beg, test.end, test.hideChar, result, test.expected)
 		}
 	}
 }
