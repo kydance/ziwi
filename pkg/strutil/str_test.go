@@ -1073,3 +1073,28 @@ func TestRegexMatchAllGroups(t *testing.T) {
 		})
 	}
 }
+
+func TestConcat(t *testing.T) {
+	tests := []struct {
+		name     string
+		length   int
+		strings  []string
+		expected string
+	}{
+		{"Empty input", 0, []string{}, ""},
+		{"Single string", 0, []string{"hello"}, "hello"},
+		{"Multiple strings", 0, []string{"hello", "world"}, "helloworld"},
+		{"Specified length", 10, []string{"hello", "world"}, "helloworld"},
+		{"Length exceeds", 5, []string{"hello", "world"}, "helloworld"},
+		{"Empty strings", 0, []string{"", "", ""}, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := Concat(tt.length, tt.strings...)
+			if actual != tt.expected {
+				t.Errorf("Concat(%d, %v) = %q; expected %q", tt.length, tt.strings, actual, tt.expected)
+			}
+		})
+	}
+}

@@ -542,11 +542,31 @@ func Rotate(str string, shift int) string {
 	return string(vr[len(vr)-shift:]) + string(vr[:len(vr)-shift])
 }
 
-func Concat(strs ...string) string {
-	return strings.Join(strs, "")
+// Concat uses the strings.Builder to concatenate the input strings.
+//   - `length` is the expected length of the concatenated string.
+//   - If unsure about the length of string to be concatenated, length set to 0 / negetive number.
+func Concat(length int, str ...string) string {
+	if len(str) == 0 {
+		return ""
+	}
+
+	sb := strings.Builder{}
+	if length <= 0 {
+		sb.Grow(len(str[0]) * len(str))
+	} else {
+		sb.Grow(length)
+	}
+
+	for _, s := range str {
+		sb.WriteString(s)
+	}
+	return sb.String()
 }
 
 // RegexMatchAll returns all matches of the pattern in the string.
+//
+//	Example
+//		("abc123",`(\w)(\w)(\w)`) -> [][]string{{"abc", "a", "b", "c"}, {"123", "1", "2", "3"}}
 func RegexMatchAllGroups(str, pattern string) [][]string {
 	return regexp.MustCompile(pattern).FindAllStringSubmatch(str, -1)
 }
