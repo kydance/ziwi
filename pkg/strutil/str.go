@@ -11,6 +11,9 @@
 package strutil
 
 import (
+	"errors"
+	"math/rand/v2"
+	"regexp"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -454,4 +457,96 @@ func ContainsAny(src string, substrs []string) bool {
 		}
 	}
 	return false
+}
+
+// RemoveWhiteSpace removes withespace from the string. When rmAll is true,
+// all whitespaces are removed, otherwise only consective whitespaces are removed.
+//
+//	Example:
+//		RemoveWhiteSpace("  hello   world  ", false) -> "hello world"
+//		RemoveWitheSpace("  hello   world  ", true) -> "helloworld"
+func RemoveWhiteSpace(str string, rmAll bool) string {
+	if rmAll && str != "" {
+		return strings.Join(strings.Fields(str), "")
+	} else if str != "" {
+		whitespaceRegexMatcher := regexp.MustCompile(`\s`)
+		mutiWhitespaceRegexMatcher := regexp.MustCompile(`[[:space:]]{2,}|[\s\p{Zs}]{2,}`)
+
+		str = whitespaceRegexMatcher.ReplaceAllString(
+			mutiWhitespaceRegexMatcher.ReplaceAllString(str, " "), " ")
+	}
+	return strings.TrimSpace(str)
+}
+
+// SubInBetween returns the substring between the beg and end.
+func SubInBetween(str, beg, end string) string {
+	if _, after, ok := strings.Cut(str, beg); ok {
+		if before, _, ok := strings.Cut(after, end); ok {
+			return before
+		}
+	}
+	return ""
+}
+
+// HammingDistance returns the Hamming distance between two strings.
+func HammingDistance(str1, str2 string) (int, error) {
+	if len(str1) != len(str2) {
+		return -1, errors.New("the length of two strings must be equal")
+	}
+
+	dis := 0
+	vR1, vR2 := []rune(str1), []rune(str2)
+
+	for idx, codepoint := range vR1 {
+		if codepoint != vR2[idx] {
+			dis++
+		}
+	}
+
+	return dis, nil
+}
+
+// Shuffle returns a shuffled string or error.
+func Shuffle(str string) (string, error) {
+	if str == "" {
+		return "", errors.New("the string is empty")
+	}
+
+	vr := []rune(str)
+	for i := len(vr) - 1; i > 0; i-- {
+		// NOTE Ignore gosec G404
+		//#nosec
+		j := rand.IntN(i + 1)
+		vr[i], vr[j] = vr[j], vr[i]
+	}
+
+	return string(vr), nil
+}
+
+// Rotate rotates the string by the specified number of characters.
+func Rotate(str string, shift int) string {
+	if shift == 0 {
+		return str
+	}
+
+	vr := []rune(str)
+	if len(vr) == 0 {
+		return str
+	}
+
+	shift = shift % len(vr)
+	if shift < 0 {
+		shift = len(vr) + shift
+	}
+
+	return string(vr[len(vr)-shift:]) + string(vr[:len(vr)-shift])
+}
+
+func Concat(strs ...string) string {
+	return strings.Join(strs, "")
+}
+
+// RegexMatchAll returns all matches of the pattern in the string.
+func RegexMatchAllGroups(str, pattern string) [][]string {
+	return regexp.MustCompile(pattern).FindAllStringSubmatch(str, -1)
 }

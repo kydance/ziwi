@@ -2,7 +2,9 @@ package strutil
 
 import (
 	"bytes"
+	"errors"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -872,5 +874,202 @@ func TestContainsAny(t *testing.T) {
 		if got != test.want {
 			t.Errorf("ContainsAny(%q, %v) = %v; want %v", test.src, test.substrs, got, test.want)
 		}
+	}
+}
+
+func TestRemoveWhiteSpace(t *testing.T) {
+	tests := []struct {
+		input    string
+		rmAll    bool
+		expected string
+	}{
+		{"hello world", false, "hello world"},
+		{"hello world", true, "helloworld"},
+
+		{"  hello   world  ", false, "hello world"},
+		{"  hello   world  ", true, "helloworld"},
+
+		{"no-whitespace", false, "no-whitespace"},
+		{"no-whitespace", true, "no-whitespace"},
+
+		{"  \t\n  ", false, ""},
+		{"  \t\n  ", true, ""},
+
+		{"中文 编程", false, "中文 编程"},
+		{"中文 编程", true, "中文编程"},
+	}
+
+	for _, test := range tests {
+		result := RemoveWhiteSpace(test.input, test.rmAll)
+		if result != test.expected {
+			t.Errorf("RemoveWhiteSpace(%q, %v) = %q; expected %q", test.input, test.rmAll, result, test.expected)
+		}
+	}
+}
+
+func TestSubInBetween(t *testing.T) {
+	tests := []struct {
+		str      string
+		beg      string
+		end      string
+		expected string
+	}{
+		{"startmiddleend", "start", "end", "middle"},
+		{"startmiddle", "start", "end", ""},
+		{"middlestartend", "start", "end", ""},
+		{"startendmiddle", "start", "end", ""},
+
+		{"startmiddleendextra", "start", "end", "middle"},
+		{"", "start", "end", ""},
+
+		{"start", "start", "end", ""},
+		{"end", "start", "end", ""},
+	}
+
+	for _, test := range tests {
+		result := SubInBetween(test.str, test.beg, test.end)
+		if result != test.expected {
+			t.Errorf("SubInBetween(%q, %q, %q) = %q; expected %q", test.str, test.beg, test.end, result, test.expected)
+		}
+	}
+}
+
+func TestHammingDistance(t *testing.T) {
+	tests := []struct {
+		str1        string
+		str2        string
+		expected    int
+		expectedErr error
+	}{
+		{"", "", 0, nil},
+		{"abc", "abc", 0, nil},
+		{"abc", "abd", 1, nil},
+		{"abc", "abcd", -1, errors.New("the length of two strings must be equal")},
+
+		{"你好世界", "你好世界", 0, nil},
+		{"你好世界", "你好世界啊", -1, errors.New("the length of two strings must be equal")},
+	}
+
+	for _, test := range tests {
+		result, err := HammingDistance(test.str1, test.str2)
+		if err != nil && test.expectedErr == nil {
+			t.Errorf("HammingDistance(%q, %q) returned unexpected error: %v", test.str1, test.str2, err)
+		} else if err == nil && test.expectedErr != nil {
+			t.Errorf("HammingDistance(%q, %q) did not return expected error: %v", test.str1, test.str2, test.expectedErr)
+		} else if err != nil && test.expectedErr != nil && err.Error() != test.expectedErr.Error() {
+			t.Errorf("HammingDistance(%q, %q) returned wrong error message: got %q, want %q", test.str1, test.str2, err.Error(), test.expectedErr.Error())
+		} else if result != test.expected {
+			t.Errorf("HammingDistance(%q, %q) = %d; want %d", test.str1, test.str2, result, test.expected)
+		}
+	}
+}
+
+func TestShuffle(t *testing.T) {
+	testCases := []struct {
+		input string
+	}{
+		{"helloworld"},
+		{"12345!@#$%"},
+		{"hellokyden"},
+
+		{""}, // 空字符串测试用例
+	}
+
+	for _, tc := range testCases {
+		shuffled, err := Shuffle(tc.input)
+		if tc.input == "" {
+			if err == nil {
+				t.Errorf("Shuffle(%q) = %q, expected an error", tc.input, shuffled)
+			}
+			continue
+		}
+
+		if shuffled == tc.input {
+			t.Errorf("Shuffle(%q) = %q, expected a different string", tc.input, shuffled)
+		}
+		if len(shuffled) != len(tc.input) {
+			t.Errorf("Shuffle(%q) length = %d, expected %d", tc.input, len(shuffled), len(tc.input))
+		}
+
+		// 可选：检查是否每个字符都在洗牌后的字符串中
+		for _, char := range tc.input {
+			if !strings.Contains(shuffled, string(char)) {
+				t.Errorf("Shuffle(%q) missing character %q", tc.input, char)
+			}
+		}
+	}
+}
+
+func TestRotate(t *testing.T) {
+	tests := []struct {
+		input    string
+		shift    int
+		expected string
+	}{
+		{"hello", 2, "lohel"},
+		{"hello", -2, "llohe"},
+		{"hello", 0, "hello"},
+		{"hello", 5, "hello"},
+		{"hello", -5, "hello"},
+
+		{"", 3, ""},
+		{"a", 1, "a"},
+		{"ab", 1, "ba"},
+		{"ab", -1, "ba"},
+	}
+
+	for _, test := range tests {
+		result := Rotate(test.input, test.shift)
+		if result != test.expected {
+			t.Errorf("Rotate(%q, %d) = %q; expected %q", test.input, test.shift, result, test.expected)
+		}
+	}
+}
+
+func TestRegexMatchAllGroups(t *testing.T) {
+	tests := []struct {
+		name     string
+		str      string
+		pattern  string
+		expected [][]string
+	}{
+		{
+			name:     "基本测试",
+			str:      "abc123",
+			pattern:  `(\w)(\w)(\w)`,
+			expected: [][]string{{"abc", "a", "b", "c"}, {"123", "1", "2", "3"}},
+		},
+		{
+			name:     "无匹配测试",
+			str:      "abc123",
+			pattern:  `(\d\d)`,
+			expected: [][]string{{"12", "12"}},
+		},
+		{
+			name:     "全局匹配测试",
+			str:      "abc123abc",
+			pattern:  `(\w)(\w)(\w)`,
+			expected: [][]string{{"abc", "a", "b", "c"}, {"123", "1", "2", "3"}, {"abc", "a", "b", "c"}},
+		},
+		{
+			name:    "复杂模式测试",
+			str:     "The quick brown fox jumps over the lazy dog.",
+			pattern: `(\w+)\s+(\w+)`,
+			expected: [][]string{
+				{"The quick", "The", "quick"},
+				{"brown fox", "brown", "fox"},
+				{"jumps over", "jumps", "over"},
+				{"the lazy", "the", "lazy"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := RegexMatchAllGroups(tt.str, tt.pattern)
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Errorf("RegexMatchAllGroups(%q, %q) = %v; want %v", tt.str, tt.pattern, actual, tt.expected)
+			}
+		})
 	}
 }
