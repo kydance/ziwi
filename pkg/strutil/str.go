@@ -435,3 +435,23 @@ func HideString(src string, beg, end int, hideChar string) string {
 
 	return src[:beg] + strings.Repeat(hideChar, end-beg) + src[end:]
 }
+
+// ContainsAll checks if the string contains all substrings.
+func ContainsAll(src string, substrs []string) bool {
+	for _, substr := range substrs {
+		if !strings.Contains(src, substr) {
+			return false
+		}
+	}
+	return true
+}
+
+// ContainsAny checks if the string contains any substring.
+func ContainsAny(src string, substrs []string) bool {
+	for _, substr := range substrs {
+		if strings.Contains(src, substr) {
+			return true
+		}
+	}
+	return false
+}

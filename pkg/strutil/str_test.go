@@ -819,3 +819,58 @@ func TestHideString(t *testing.T) {
 		}
 	}
 }
+
+func TestContainsAll(t *testing.T) {
+	tests := []struct {
+		src     string
+		substrs []string
+		want    bool
+	}{
+		{"hello world", []string{"hello", "world"}, true},
+		{"hello world", []string{"hello", "planet"}, false},
+		{"", []string{}, true},
+
+		{"hello", []string{"hello", "h"}, true},
+		{"hello", []string{"hell", "o"}, true},
+		{"hello", []string{"he", "llo"}, true},
+		{"hello", []string{"he", "l", "lo"}, true},
+		{"hello", []string{"he", "ll", "o"}, true},
+
+		{"hello", []string{"h", "e", "l", "l", "o"}, true},
+		{"hello", []string{"h", "e", "l", "l", "o", "x"}, false},
+	}
+
+	for _, test := range tests {
+		got := ContainsAll(test.src, test.substrs)
+		if got != test.want {
+			t.Errorf("ContainsAll(%q, %v) = %v; want %v", test.src, test.substrs, got, test.want)
+		}
+	}
+}
+
+func TestContainsAny(t *testing.T) {
+	tests := []struct {
+		src     string
+		substrs []string
+		want    bool
+	}{
+		{"hello world", []string{"hello", "world"}, true},
+		{"hello world", []string{"planet", "mars"}, false},
+		{"hello world", []string{"planet", "mars", "hello"}, true},
+		{"hello world", []string{"planet", "mars", "jupiter"}, false},
+
+		{"", []string{}, false},
+		{"hello", []string{"hell", "o"}, true},
+		{"hello", []string{"he", "llo"}, true},
+		{"hello", []string{"he", "ll", "o"}, true},
+		{"hello", []string{"he", "l", "lo"}, true},
+		{"hello", []string{"he", "ll", "o", "x"}, true},
+	}
+
+	for _, test := range tests {
+		got := ContainsAny(test.src, test.substrs)
+		if got != test.want {
+			t.Errorf("ContainsAny(%q, %v) = %v; want %v", test.src, test.substrs, got, test.want)
+		}
+	}
+}
