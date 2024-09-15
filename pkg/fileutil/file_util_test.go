@@ -1,9 +1,12 @@
 package fileutil
 
 import (
+	"archive/zip"
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -499,5 +502,358 @@ func TestClearFile(t *testing.T) {
 	}
 	if len(content) != 0 {
 		t.Errorf("Expected empty content, got: %s", content)
+	}
+}
+
+func TestReadFileToString(t *testing.T) {
+	tempFile, err := os.CreateTemp("", "testfile")
+	if err != nil {
+		t.Fatalf("Create temp file failed: %v", err)
+	}
+	defer os.Remove(tempFile.Name())
+
+	testData := []byte("Hello, World!")
+	if _, err := tempFile.Write(testData); err != nil {
+		t.Fatalf("Write temp file failed: %v", err)
+	}
+	if err := tempFile.Close(); err != nil {
+		t.Fatalf("Close temp file failed: %v", err)
+	}
+
+	content, err := ReadFileToString(tempFile.Name())
+	if err != nil {
+		t.Fatalf("ReadFileToString failed: %v", err)
+	}
+
+	if content != string(testData) {
+		t.Errorf("Read content error, Expected: %q, Real: %q", string(testData), content)
+	}
+
+	// Test with non-existent file
+	_, err = ReadFileToString("/nonexistent/path/to/file.txt")
+	if err == nil {
+		t.Error("Expected error when reading non-existent file, got nil")
+	}
+}
+
+func TestReadFileByLine(t *testing.T) {
+	tempFile, err := os.CreateTemp("", "testfile")
+	if err != nil {
+		t.Fatalf("Create temp file failed: %v", err)
+	}
+	defer os.Remove(tempFile.Name())
+
+	testData := []byte("Hello, World!\r\nThis is a test.\nAnother line.")
+	if _, err := tempFile.Write(testData); err != nil {
+		t.Fatalf("Write temp file failed: %v", err)
+	}
+	if err := tempFile.Close(); err != nil {
+		t.Fatalf("Close temp file failed: %v", err)
+	}
+
+	lines, err := ReadFileByLine(tempFile.Name())
+	if err != nil {
+		t.Fatalf("ReadFileByLine failed: %v", err)
+	}
+
+	expectedLines := []string{"Hello, World!", "This is a test.", "Another line."}
+	if !reflect.DeepEqual(lines, expectedLines) {
+		t.Errorf("ReadFileByLine error, Expected: %v, Got: %v", expectedLines, lines)
+	}
+}
+
+func TestReadFileByLine_EmptyFile(t *testing.T) {
+	tempFile, err := os.CreateTemp("", "testfile")
+	if err != nil {
+		t.Fatalf("Create temp file failed: %v", err)
+	}
+	defer os.Remove(tempFile.Name())
+
+	lines, err := ReadFileByLine(tempFile.Name())
+	if err != nil {
+		t.Fatalf("ReadFileByLine failed: %v", err)
+	}
+
+	if len(lines) != 0 {
+		t.Errorf("ReadFileByLine error, Expected empty file, Got: %v", lines)
+	}
+}
+
+func TestReadFileByLine_FileNotFound(t *testing.T) {
+	_, err := ReadFileByLine("/nonexistent/file.txt")
+	if err == nil {
+		t.Error("Expected error for non-existent file, got nil")
+	}
+}
+
+func TestFilesCurDir(t *testing.T) {
+	// Test case 1: Directory does not exist
+	vfn, err := FilesCurDir("/nonexistentdir")
+	if vfn != nil || err != nil {
+		t.Errorf("Expected no error when directory does not exist, got: %v", err)
+	}
+
+	// Test case 2: Directory exists but is empty
+	tempDir, err := os.MkdirTemp("", "emptydir")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	files, err := FilesCurDir(tempDir)
+	if err != nil {
+		t.Errorf("Expected no error when directory is empty, got: %v", err)
+	}
+	if len(files) != 0 {
+		t.Errorf("Expected 0 files in empty directory, got: %d", len(files))
+	}
+
+	// Test case 3: Directory exists with files and subdirectories
+	tempDir, err = os.MkdirTemp("", "testdir")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	testFile := filepath.Join(tempDir, "testfile.txt")
+	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	subdir := filepath.Join(tempDir, "subdir")
+	if err := os.Mkdir(subdir, 0755); err != nil {
+		t.Fatalf("Failed to create subdir: %v", err)
+	}
+
+	files, err = FilesCurDir(tempDir)
+	if err != nil {
+		t.Errorf("Expected no error when directory has files and subdirs, got: %v", err)
+	}
+	expectedFiles := []string{"testfile.txt"}
+	if !reflect.DeepEqual(files, expectedFiles) {
+		t.Errorf("Expected files %v, got: %v", expectedFiles, files)
+	}
+}
+
+func TestIsZipFile(t *testing.T) {
+	tests := []struct {
+		name     string
+		filePath string
+		want     bool
+	}{
+		{
+			name:     "Valid Zip File",
+			filePath: "test_data/test.zip",
+			want:     true,
+		},
+		{
+			name:     "Invalid Zip File",
+			filePath: "test_data/test_1.txt",
+			want:     false,
+		},
+		{
+			name:     "Non-Existent File",
+			filePath: "/path/to/non/existent/file.zip",
+			want:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsZipFile(tt.filePath); got != tt.want {
+				t.Errorf("IsZipFile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestZip_File(t *testing.T) {
+	dst := "test_data/test_1.zip"
+	src := "test_data/test_1.txt"
+
+	err := Zip(dst, src)
+	if err != nil {
+		t.Errorf("Zip failed: %v", err)
+	}
+	defer RemoveFile(dst)
+
+	if !IsZipFile(dst) {
+		t.Errorf("Zip failed: %v", err)
+	}
+}
+
+func TestZip_Directory(t *testing.T) {
+	dst := "test_data.zip"
+	src := "test_data"
+
+	err := Zip(dst, src)
+	if err != nil {
+		t.Errorf("Zip failed: %v", err)
+	}
+	defer RemoveFile(dst)
+
+	if !IsZipFile(dst) {
+		t.Errorf("Zip failed: %v", err)
+	}
+}
+
+func TestUnZip(t *testing.T) {
+	// Setup
+	src := "test_data/subdir"
+	dst := "test_data/subdir.zip"
+
+	// Create a test zip file
+	err := Zip(dst, src)
+	if err != nil {
+		t.Fatalf("Zip failed: %v", err)
+	}
+
+	// Test unzipping the file
+	err = UnZip(src+"_test", dst)
+	if err != nil {
+		t.Fatalf("UnZip failed: %v", err)
+	}
+
+	// Cleanup
+	os.RemoveAll(src + "_test")
+	RemoveFile(dst)
+}
+
+func TestZipAppendEntry(t *testing.T) {
+	// Setup
+	dst := "test_1.zip"
+	src := "test_data/test.zip"
+
+	defer os.Remove(dst)
+
+	// Test appending directory to zip
+	err := ZipAppendEntry(dst, src)
+	if err != nil {
+		t.Fatalf("ZipAppendEntry failed: %v", err)
+	}
+
+	// Verify the zip file content
+	zipReader, err := zip.OpenReader(dst)
+	if err != nil {
+		t.Fatalf("Failed to open zip file: %v", err)
+	}
+	defer zipReader.Close()
+
+	// Check the number of files in the zip
+	if len(zipReader.File) != 3 { // Assuming testdir contains two files
+		t.Errorf("Expected 2 files in zip, got %d", len(zipReader.File))
+	}
+
+	// Check the names of the files in the zip
+	expectedNames := map[string]bool{
+		"template-go":            false,
+		"test.zip":               false,
+		"__MACOSX/._template-go": false,
+	}
+	for _, file := range zipReader.File {
+		if _, ok := expectedNames[file.Name]; ok {
+			expectedNames[file.Name] = true
+		} else {
+			t.Errorf("Unexpected file in zip: %s", file.Name)
+		}
+	}
+
+	// Check that all expected files were found
+	for name, found := range expectedNames {
+		if !found {
+			t.Errorf("Expected file not found in zip: %s", name)
+		}
+	}
+}
+
+func TestIsLink(t *testing.T) {
+	// Create a temporary directory for tests
+	tempDir, err := os.MkdirTemp("", "testislink")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Test case 1: File is not a symlink
+	tempFile, err := os.Create(filepath.Join(tempDir, "testfile"))
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	tempFile.Close()
+	if IsLink(tempFile.Name()) {
+		t.Errorf("Expected false for non-symlink file, got true")
+	}
+
+	// Test case 2: File is a symlink
+	symlinkPath := filepath.Join(tempDir, "symlink")
+	if err := os.Symlink(tempFile.Name(), symlinkPath); err != nil {
+		t.Fatalf("Failed to create symlink: %v", err)
+	}
+	if !IsLink(symlinkPath) {
+		t.Errorf("Expected true for symlink file, got false")
+	}
+
+	// Test case 3: Path does not exist
+	nonExistentPath := filepath.Join(tempDir, "nonexistent")
+	if IsLink(nonExistentPath) {
+		t.Errorf("Expected false for non-existent path, got true")
+	}
+}
+
+func TestFileMode(t *testing.T) {
+	// Setup: Create a temporary directory and files
+	tempDir, err := os.MkdirTemp("", "filemode_test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir) // Teardown
+
+	// Create files with different permissions
+	files := map[string]os.FileMode{
+		"normal.txt": 0644,
+		"dir":        0755,
+		"link":       0644,
+	}
+
+	for name, mode := range files {
+		path := filepath.Join(tempDir, name)
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			t.Fatalf("Failed to create directory for %s: %v", name, err)
+		}
+		if err := os.WriteFile(path, []byte{}, mode); err != nil {
+			t.Fatalf("Failed to create file %s: %v", name, err)
+		}
+		if name == "link" {
+			linkPath := filepath.Join(tempDir, "link_to_normal.txt")
+			if err := os.Symlink("normal.txt", linkPath); err != nil {
+				t.Fatalf("Failed to create symlink %s: %v", linkPath, err)
+			}
+		}
+	}
+
+	// Test cases
+	tests := []struct {
+		name     string
+		path     string
+		expected os.FileMode
+		hasError bool
+	}{
+		{"Existing file", filepath.Join(tempDir, "normal.txt"), 0644, false},
+		{"Existing directory", filepath.Join(tempDir, "dir"), 0755, false},
+		{"Existing symlink", filepath.Join(tempDir, "link_to_normal.txt"), os.ModeSymlink | 0755, false},
+		{"Non-existing file", filepath.Join(tempDir, "non_existing.txt"), 0, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mode, err := FileMode(tt.path)
+			if (err != nil) != tt.hasError {
+				t.Errorf("FileMode() error = %v, hasError %v", err, tt.hasError)
+				return
+			}
+			if mode != tt.expected {
+				t.Errorf("FileMode() got = %v, want %v", mode, tt.expected)
+			}
+		})
 	}
 }
