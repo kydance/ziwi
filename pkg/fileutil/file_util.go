@@ -35,6 +35,11 @@ import (
 	"github.com/kydance/ziwi/pkg/strutil"
 )
 
+const (
+	zipPreFix    = "PK\x03\x04"
+	zipPrefixLen = 4
+)
+
 // FileReader is a wrapper of bufio.Reader,
 // supporting offset seek, reading one line at a time.
 type FileReader struct {
@@ -254,19 +259,19 @@ func FilesCurDir(dir string) ([]string, error) {
 		return nil, err
 	}
 
-	sz := len(vEntry)
-	if sz == 0 {
+	if len(vEntry) == 0 {
 		return nil, nil
 	}
 
-	vs := make([]string, 0)
+	// vector of filenames
+	vfn := make([]string, 0)
 	for _, entry := range vEntry {
 		if IsDir(filepath.Join(dir, entry.Name())) {
 			continue
 		}
-		vs = append(vs, entry.Name())
+		vfn = append(vfn, entry.Name())
 	}
-	return vs, nil
+	return vfn, nil
 }
 
 // IsZipFile checks if a file is a zip file (PK\x03\x04).
@@ -277,12 +282,12 @@ func IsZipFile(file string) bool {
 	}
 	defer f.Close()
 
-	buf := make([]byte, 4)
-	if n, err := f.Read(buf); err != nil || n < 4 {
+	buf := make([]byte, zipPrefixLen)
+	if n, err := f.Read(buf); err != nil || n < zipPrefixLen {
 		return false
 	}
 
-	return bytes.Equal(buf, []byte("PK\x03\x04"))
+	return bytes.Equal(buf, []byte(zipPreFix))
 }
 
 // Zip compresses a file or directory to a zip file.
@@ -714,7 +719,7 @@ func ReadFile(path string) (reader io.ReadCloser, closeFn func(), err error) {
 // returns all lines within block
 func ChunkRead(file *os.File, offset int64, size int, bufPool *sync.Pool) ([]string, error) {
 	// Get buf from pool and adjust size
-	buf := bufPool.Get().([]byte)[:size]
+	buf := (*bufPool.Get().(*[]byte))[:size]
 
 	// Read data from offset position
 	n, err := file.ReadAt(buf, offset)
@@ -745,64 +750,80 @@ func ChunkRead(file *os.File, offset int64, size int, bufPool *sync.Pool) ([]str
 	}
 
 	// After reading data, put buf into pool
-	bufPool.Put(buf)
+	bufPool.Put(&buf)
 	return lines, nil
 }
 
+// ParallelChunkRead reads a file in parallel chunks and sends each chunk
+// as a slice of strings to the provided channel. It uses goroutines to
+// read multiple chunks simultaneously, controlled by the maxGoroutine parameter.
+// If chunkSizeMB is 0, it defaults to 100MB.
 func ParallelChunkRead(file string, chLines chan<- []string, chunkSizeMB, maxGoroutine int) error {
+	// Default chunk size to 100MB if not specified
 	if chunkSizeMB == 0 {
 		chunkSizeMB = 100
 	}
+	// Calculate the chunk size in bytes
 	chunkSize := chunkSizeMB * 1024 * 1024
+
+	// Buffer pool for reusing byte slices to reduce memory allocation
 	bufPool := sync.Pool{
 		New: func() any {
-			return make([]byte, 0, chunkSize)
+			buffer := make([]byte, 0, chunkSize)
+			return &buffer
 		},
 	}
 
+	// Default to the number of CPUs if maxGoroutine is not specified
 	if maxGoroutine == 0 {
 		maxGoroutine = runtime.NumCPU()
 	}
 
+	// Open the file and handle errors
 	f, err := os.Open(file)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer f.Close() // Ensure the file is closed after reading
 
+	// Get file info and handle errors
 	info, err := f.Stat()
 	if err != nil {
 		return err
 	}
 
+	// WaitGroup to wait for all goroutines to finish
 	wg := sync.WaitGroup{}
+	// Channel to manage chunk offsets for goroutines
 	chChunkOffset := make(chan int64, maxGoroutine)
 
-	// Alloc task
+	// Allocate tasks by sending chunk offsets to the channel
 	go func() {
 		for i := int64(0); i < info.Size(); i += (int64(chunkSize)) {
 			chChunkOffset <- i
 		}
+		close(chChunkOffset) // Close the channel when all offsets are sent
 	}()
 
-	// Start work goroutine
+	// Start work goroutines
 	for i := 0; i < maxGoroutine; i++ {
 		wg.Add(1)
-
 		go func() {
+			defer wg.Done() // Signal when the goroutine is done
 			for chunkOffset := range chChunkOffset {
+				// Read a chunk from the file
 				chunk, err := ChunkRead(f, chunkOffset, chunkSize, &bufPool)
 				if err != nil {
+					// Send the chunk to the channel even if there's an error
 					chLines <- chunk
 				}
 			}
-			wg.Done()
 		}()
 	}
 
-	// Wait
+	// Wait for all goroutines to finish
 	wg.Wait()
-	close(chLines)
+	close(chLines) // Close the lines channel after all chunks are sent
 
 	return nil
 }
