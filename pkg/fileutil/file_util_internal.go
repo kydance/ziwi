@@ -122,3 +122,31 @@ func safeFilepathJoin(path1, path2 string) (string, error) {
 	}
 	return filepath.Join(path1, filepath.Join("/", relPath)), nil
 }
+
+// escapeCSVField change `\"` to `\"\"` when field contains delimiter.
+func escapeCSVField(field string, delimiter rune) string {
+	// change `"` -> `""`
+	escapeField := strings.ReplaceAll(field, "\"", "\"\"")
+
+	// If field contains [delimiter, `\"`, `\n`], add sournding `"..."`
+	if strings.ContainsAny(escapeField, string(delimiter)+"\"\n") {
+		escapeField = fmt.Sprintf("\"%s\"", escapeField)
+	}
+
+	return escapeField
+}
+
+func isCsvSupportedType(val any) bool {
+	switch val.(type) {
+	case bool,
+		rune, string,
+		int, int64,
+		float32, float64,
+		uint, byte,
+		complex128, complex64,
+		uintptr:
+		return true
+	default:
+		return false
+	}
+}
