@@ -14,6 +14,9 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
+	"encoding/csv"
+	"sort"
+	"sync"
 
 	// #nosec
 	"crypto/sha1"
@@ -28,6 +31,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/kydance/ziwi/pkg/strutil"
 )
 
 // FileReader is a wrapper of bufio.Reader,
@@ -547,4 +552,257 @@ func SHA(file string, SHAType ...int) (string, error) {
 	}
 
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
+// ReadCSV read file content into slices.
+func ReadCSV(file string, delimiter ...rune) ([][]string, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	reader := csv.NewReader(f)
+	if len(delimiter) > 0 {
+		reader.Comma = delimiter[0]
+	}
+
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
+}
+
+// WriteCSV writes content to target csv file.
+//
+//	append: append to existing csv file
+//	delimiter: specifies csv delimiter
+func WriteCSV(file string, records [][]string, append bool, delimiter ...rune) error {
+	flag := os.O_RDWR | os.O_CREATE
+	if append {
+		flag |= os.O_APPEND
+	}
+
+	f, err := os.OpenFile(file, flag, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	writer := csv.NewWriter(f)
+	if len(delimiter) > 0 {
+		writer.Comma = delimiter[0]
+	} else {
+		writer.Comma = ','
+	}
+
+	for i := range records {
+		for j := range records[i] {
+			records[i][j] = escapeCSVField(records[i][j], writer.Comma)
+		}
+	}
+
+	return writer.WriteAll(records)
+}
+
+// WriteMapsToCSV writes slices of map to csv files.
+//
+//	records: slice of map to be written. The value of map should be basic type.
+//	The maps will be sorted by key in alphabeta order, then be written into csv file.
+//	app: true -> records will be appended to the file if exists.
+//	headers: order of the csv column headers, needs to be consistent with the key of the map.
+func WriteMapsToCSV(file string, records []map[string]any,
+	app bool, delimiter rune, headers ...[]string) error {
+	for _, record := range records {
+		for _, value := range record {
+			if !isCsvSupportedType(value) {
+				return errors.New(
+					"unsupported value type detected; only basic types are supported: \n" +
+						"bool, rune, string, int, int64, float32, float64," +
+						" uint, byte, complex128, complex64, uintptr")
+			}
+		}
+	}
+
+	var colHeaders []string
+	if len(headers) > 0 {
+		colHeaders = headers[0]
+	} else {
+		for key := range records[0] {
+			colHeaders = append(colHeaders, key)
+		}
+		// sort keys in alphabeta order
+		sort.Strings(colHeaders)
+	}
+
+	vvsToWrite := make([][]string, 0)
+	if !app {
+		vvsToWrite = append(vvsToWrite, colHeaders)
+	}
+
+	for _, record := range records {
+		var row []string
+		for _, h := range colHeaders {
+			row = append(row, fmt.Sprintf("%v", record[h]))
+		}
+		vvsToWrite = append(vvsToWrite, row)
+	}
+
+	return WriteCSV(file, vvsToWrite, app, delimiter)
+}
+
+// WriteStringToFile writes string to specifies file.
+func WriteStringToFile(file, content string, append bool) error {
+	flag := os.O_RDWR | os.O_CREATE
+	if append {
+		flag |= os.O_APPEND
+	} else {
+		flag |= os.O_TRUNC
+	}
+
+	f, err := os.OpenFile(file, flag, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.WriteString(content)
+	return err
+}
+
+// WriteBytesToFile writes bytes to specified file with O_TRUNC flag.
+func WriteBytesToFile(file string, content []byte) error {
+	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.Write(content)
+	return err
+}
+
+// ReadFile gets file reader by a URL or local file.
+func ReadFile(path string) (reader io.ReadCloser, closeFn func(), err error) {
+	switch {
+	case strutil.IsURL(path):
+		// FIXME G107: Potential HTTP request made with variable url
+		//#nosec
+		resp, err := http.Get(path) //nolint:bodyclose
+		if err != nil {
+			return nil, func() {}, err
+		}
+
+		return resp.Body, func() { resp.Body.Close() }, nil
+
+	case IsExist(path):
+		reader, err := os.Open(path)
+		if err != nil {
+			return nil, func() {}, err
+		}
+
+		return reader, func() { reader.Close() }, nil
+
+	default:
+		return nil, func() {}, errors.New("unknown file type")
+	}
+}
+
+// ChunkRead reads a block from the file at the specified offset and
+// returns all lines within block
+func ChunkRead(file *os.File, offset int64, size int, bufPool *sync.Pool) ([]string, error) {
+	// Get buf from pool and adjust size
+	buf := bufPool.Get().([]byte)[:size]
+
+	// Read data from offset position
+	n, err := file.ReadAt(buf, offset)
+	if err != nil && err == io.EOF {
+		return nil, err
+	}
+	// Adjust to match real data
+	buf = buf[:n]
+
+	var (
+		lineBeg int // The begin of line
+		lines   []string
+	)
+	for idx, bVal := range buf {
+		if bVal == '\n' {
+			// Not include `\n`
+			line := string(buf[lineBeg:idx])
+			lines = append(lines, line)
+			// Set the begin of next line
+			lineBeg = idx + 1
+		}
+	}
+
+	// Handle the last lines of block
+	if lineBeg < len(buf) {
+		line := string(buf[lineBeg:])
+		lines = append(lines, line)
+	}
+
+	// After reading data, put buf into pool
+	bufPool.Put(buf)
+	return lines, nil
+}
+
+func ParallelChunkRead(file string, chLines chan<- []string, chunkSizeMB, maxGoroutine int) error {
+	if chunkSizeMB == 0 {
+		chunkSizeMB = 100
+	}
+	chunkSize := chunkSizeMB * 1024 * 1024
+	bufPool := sync.Pool{
+		New: func() any {
+			return make([]byte, 0, chunkSize)
+		},
+	}
+
+	if maxGoroutine == 0 {
+		maxGoroutine = runtime.NumCPU()
+	}
+
+	f, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	info, err := f.Stat()
+	if err != nil {
+		return err
+	}
+
+	wg := sync.WaitGroup{}
+	chChunkOffset := make(chan int64, maxGoroutine)
+
+	// Alloc task
+	go func() {
+		for i := int64(0); i < info.Size(); i += (int64(chunkSize)) {
+			chChunkOffset <- i
+		}
+	}()
+
+	// Start work goroutine
+	for i := 0; i < maxGoroutine; i++ {
+		wg.Add(1)
+
+		go func() {
+			for chunkOffset := range chChunkOffset {
+				chunk, err := ChunkRead(f, chunkOffset, chunkSize, &bufPool)
+				if err != nil {
+					chLines <- chunk
+				}
+			}
+			wg.Done()
+		}()
+	}
+
+	// Wait
+	wg.Wait()
+	close(chLines)
+
+	return nil
 }

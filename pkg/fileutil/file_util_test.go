@@ -2,9 +2,13 @@ package fileutil
 
 import (
 	"archive/zip"
+	"encoding/csv"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -1147,5 +1151,504 @@ func TestSHA(t *testing.T) {
 				t.Errorf("SHA() got = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestReadCSV(t *testing.T) {
+	// Test case 1: Valid CSV file with default delimiter
+	records, err := ReadCSV("test_data/test_read.csv")
+	if err != nil {
+		t.Errorf("ReadCSV() error = %v", err)
+		return
+	}
+	expectedRecords := [][]string{
+		{"header1", "header2", "header3"},
+		{"value1", "value2", "value3"},
+		{"value4", "value5", "value6"},
+	}
+	if !reflect.DeepEqual(records, expectedRecords) {
+		t.Errorf("ReadCSV() got = %v, want %v", records, expectedRecords)
+	}
+
+	// Test case 2: Valid CSV file with custom delimiter
+	records, err = ReadCSV("test_data/test_read_pipe.csv", '|')
+	if err != nil {
+		t.Errorf("ReadCSV() error = %v", err)
+		return
+	}
+	expectedRecords = [][]string{
+		{"header1", "header2", "header3"},
+		{"value1", "value2", "value3"},
+		{"value4", "value5", "value6"},
+	}
+	if !reflect.DeepEqual(records, expectedRecords) {
+		t.Errorf("ReadCSV() got = %v, want %v", records, expectedRecords)
+	}
+
+	// Test case 3: Invalid file path
+	_, err = ReadCSV("nonexistent.csv")
+	if err == nil {
+		t.Error("ReadCSV() expected error, got nil")
+		return
+	}
+
+	// Test case 4: Empty CSV file
+	emptyFile, err := os.CreateTemp("", "empty.csv")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(emptyFile.Name())
+	emptyFile.Close()
+
+	records, err = ReadCSV(emptyFile.Name())
+	if err != nil {
+		t.Errorf("ReadCSV() error = %v", err)
+		return
+	}
+	if len(records) != 0 {
+		t.Errorf("ReadCSV() got = %v, want empty slice", records)
+	}
+
+	// Test case 5: CSV file with invalid data
+	invalidFile, err := os.CreateTemp("", "invalid.csv")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(invalidFile.Name())
+	invalidFile.WriteString("header1,header2\nvalue1,value2,value3")
+	invalidFile.Close()
+
+	_, err = ReadCSV(invalidFile.Name())
+	var perr *csv.ParseError
+	if !errors.As(err, &perr) {
+		t.Errorf("ReadCSV() expected *csv.ParseError, got %T: %v", err, err)
+	}
+}
+
+func TestReadCSV_EmptyFile(t *testing.T) {
+	// Create a temporary empty file
+	tmpFile, err := os.CreateTemp("", "empty.csv")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpFile.Name())
+	tmpFile.Close()
+
+	// Try to read the empty CSV file
+	records, err := ReadCSV(tmpFile.Name())
+	if err != nil {
+		t.Errorf("ReadCSV() unexpected error: %v", err)
+	}
+
+	// Expect an empty slice for an empty file
+	if len(records) != 0 {
+		t.Errorf("ReadCSV() expected an empty slice, got: %v", records)
+	}
+}
+
+func TestReadCSV_InvalidCSV(t *testing.T) {
+	// Create a temporary file with invalid CSV data
+	tmpFile, err := os.CreateTemp("", "invalid.csv")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	// Write invalid CSV data
+	_, err = tmpFile.WriteString("header1,header2\nvalue1,value2,value3\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpFile.Close()
+
+	// Try to read the invalid CSV file
+	_, err = ReadCSV(tmpFile.Name())
+	if err == nil {
+		t.Error("ReadCSV() expected error for invalid CSV, got nil")
+	} else if !errors.Is(err, csv.ErrFieldCount) {
+		t.Errorf("ReadCSV() expected csv.ErrFieldCount, got: %v", err)
+	}
+}
+
+func TestReadCSV_ReaderError(t *testing.T) {
+	// Create a mock file that returns an error on Read
+	mockFile := &mockFileReader{
+		readFn: func(p []byte) (n int, err error) {
+			return 0, io.ErrNoProgress
+		},
+	}
+
+	// Create a CSV reader using the mock file
+	reader := csv.NewReader(mockFile)
+
+	// Try to read all records
+	_, err := reader.ReadAll()
+	if err == nil {
+		t.Error("reader.ReadAll() expected error, got nil")
+	} else if !errors.Is(err, io.ErrNoProgress) {
+		t.Errorf("reader.ReadAll() expected io.ErrNoProgress, got: %v", err)
+	}
+}
+
+// mockFileReader implements io.Reader for testing purposes.
+type mockFileReader struct {
+	readFn func(p []byte) (n int, err error)
+}
+
+func (m *mockFileReader) Read(p []byte) (n int, err error) {
+	return m.readFn(p)
+}
+
+func TestWriteCSV(t *testing.T) {
+	tempFile := "test_data/test_write.csv"
+	defer os.Remove(tempFile)
+
+	// Test case 1: Write to a new file
+	records := [][]string{
+		{"header1", "header2", "header3"},
+		{"value1", "value2", "value3"},
+	}
+	err := WriteCSV(tempFile, records, false)
+	if err != nil {
+		t.Errorf("WriteCSV() error = %v", err)
+		return
+	}
+
+	// Verify the content of the file
+	readRecords, err := ReadCSV(tempFile)
+	if err != nil {
+		t.Errorf("ReadCSV() error = %v", err)
+		return
+	}
+	if !reflect.DeepEqual(records, readRecords) {
+		t.Errorf("WriteCSV() wrote incorrect data to the file")
+	}
+
+	// Test case 2: Append to an existing file
+	appendRecords := [][]string{
+		{"value4", "value5", "value6"},
+	}
+	err = WriteCSV(tempFile, appendRecords, true)
+	if err != nil {
+		t.Errorf("WriteCSV() error = %v", err)
+		return
+	}
+
+	// Verify the content of the file
+	readRecords, err = ReadCSV(tempFile)
+	if err != nil {
+		t.Errorf("ReadCSV() error = %v", err)
+		return
+	}
+	expectedRecords := [][]string{
+		{"header1", "header2", "header3"},
+		{"value1", "value2", "value3"},
+		{"value4", "value5", "value6"},
+	}
+	if !reflect.DeepEqual(expectedRecords, readRecords) {
+		t.Errorf("WriteCSV() did not append data correctly to the file")
+	}
+
+	// Test case 3: Write with custom delimiter
+	recordsWithDelimiter := [][]string{
+		{"header1", "header2", "header3"},
+		{"value1", "value2", "value3"},
+	}
+	err = WriteCSV("test_data/test_write_pipe.csv", recordsWithDelimiter, false, '|')
+	if err != nil {
+		t.Errorf("WriteCSV() error = %v", err)
+		return
+	}
+	defer os.Remove("test_data/test_write_pipe.csv")
+
+	// Verify the content of the file
+	readRecords, err = ReadCSV("test_data/test_write_pipe.csv", '|')
+	if err != nil {
+		t.Errorf("ReadCSV() error = %v", err)
+		return
+	}
+	if !reflect.DeepEqual(recordsWithDelimiter, readRecords) {
+		t.Errorf("WriteCSV() wrote incorrect data to the file with custom delimiter")
+	}
+
+	// Test case 4: Error when opening file
+	err = WriteCSV("/invalid/path/test.csv", records, false)
+	if err == nil {
+		t.Error("WriteCSV() expected error, got nil")
+	}
+}
+
+func TestWriteCSV_ErrorOnCreate(t *testing.T) {
+	// Use a directory that doesn't exist to force an error
+	invalidFilePath := "/invalid/path/test.csv"
+	records := [][]string{{"data"}}
+
+	err := WriteCSV(invalidFilePath, records, false)
+	if err == nil {
+		t.Error("WriteCSV() expected error, got nil")
+	}
+
+	var pathError *fs.PathError
+	if !errors.As(err, &pathError) {
+		t.Errorf("Expected error to be a *fs.PathError, got %T", err)
+	}
+}
+
+func TestWriteMapsToCSV(t *testing.T) {
+	tempFile := "test_data/test_maps.csv"
+	defer os.Remove(tempFile)
+
+	// Test case 1: Write to a new file with headers
+	records := []map[string]any{
+		{"header1": "value1", "header2": 123, "header3": true},
+		{"header1": "value4", "header2": 456, "header3": false},
+	}
+	headers := []string{"header1", "header2", "header3"}
+	err := WriteMapsToCSV(tempFile, records, false, ',', headers)
+	if err != nil {
+		t.Errorf("WriteMapsToCSV() error = %v", err)
+		return
+	}
+
+	// Verify the content of the file
+	expectedRecords := [][]string{
+		{"header1", "header2", "header3"},
+		{"value1", "123", "true"},
+		{"value4", "456", "false"},
+	}
+	readRecords, err := ReadCSV(tempFile)
+	if err != nil {
+		t.Errorf("ReadCSV() error = %v", err)
+		return
+	}
+	if !reflect.DeepEqual(expectedRecords, readRecords) {
+		t.Errorf("WriteMapsToCSV() wrote incorrect data to the file")
+	}
+
+	// Test case 2: Append to an existing file without headers
+	appendRecords := []map[string]any{
+		{"header1": "value7", "header2": 789, "header3": true},
+	}
+	err = WriteMapsToCSV(tempFile, appendRecords, true, ',')
+	if err != nil {
+		t.Errorf("WriteMapsToCSV() error = %v", err)
+		return
+	}
+
+	// Verify the content of the file
+	expectedRecords = [][]string{
+		{"header1", "header2", "header3"},
+		{"value1", "123", "true"},
+		{"value4", "456", "false"},
+		{"value7", "789", "true"},
+	}
+	readRecords, err = ReadCSV(tempFile)
+	if err != nil {
+		t.Errorf("ReadCSV() error = %v", err)
+		return
+	}
+	if !reflect.DeepEqual(expectedRecords, readRecords) {
+		t.Errorf("WriteMapsToCSV() did not append data correctly to the file")
+	}
+
+	// Test case 3: Unsupported value type
+	invalidRecords := []map[string]any{
+		{"header1": "value1", "header2": []int{1, 2, 3}},
+	}
+	err = WriteMapsToCSV(tempFile, invalidRecords, false, ',')
+	if err == nil {
+		t.Error("WriteMapsToCSV() expected error, got nil")
+		return
+	}
+}
+
+func TestWriteStringToFile(t *testing.T) {
+	tempFile := "test_data/test_write_string.txt"
+	defer os.Remove(tempFile)
+
+	// Test case 1: Write to a new file
+	content := "Hello, World!"
+	err := WriteStringToFile(tempFile, content, false)
+	if err != nil {
+		t.Errorf("WriteStringToFile() error = %v", err)
+		return
+	}
+
+	// Verify the content of the file
+	readContent, err := ReadFileToString(tempFile)
+	if err != nil {
+		t.Errorf("ReadFileToString() error = %v", err)
+		return
+	}
+	if content != readContent {
+		t.Errorf("WriteStringToFile() wrote incorrect data to the file. Expected: %s, Got: %s", content, readContent)
+	}
+
+	// Test case 2: Append to an existing file
+	appendContent := "\nThis is appended content."
+	err = WriteStringToFile(tempFile, appendContent, true)
+	if err != nil {
+		t.Errorf("WriteStringToFile() error = %v", err)
+		return
+	}
+
+	// Verify the content of the file
+	readContent, err = ReadFileToString(tempFile)
+	if err != nil {
+		t.Errorf("ReadFileToString() error = %v", err)
+		return
+	}
+	if content+appendContent != readContent {
+		t.Errorf("WriteStringToFile() did not append data correctly to the file")
+	}
+
+	// Test case 3: Error when opening file
+	err = WriteStringToFile("/invalid/path/test.txt", content, false)
+	if err == nil {
+		t.Error("WriteStringToFile() expected error, got nil")
+	}
+}
+
+func TestWriteBytesToFile(t *testing.T) {
+	tempFile := "test_data/test_write_bytes.txt"
+	defer os.Remove(tempFile)
+
+	// Test case 1: Write to a new file
+	content := []byte("Hello, World!")
+	err := WriteBytesToFile(tempFile, content)
+	if err != nil {
+		t.Errorf("WriteBytesToFile() error = %v", err)
+		return
+	}
+
+	// Verify the content of the file
+	readContent, err := os.ReadFile(tempFile)
+	if err != nil {
+		t.Errorf("ReadFile() error = %v", err)
+		return
+	}
+	if !reflect.DeepEqual(content, readContent) {
+		t.Errorf("WriteBytesToFile() wrote incorrect data to the file")
+	}
+
+	// Test case 2: Overwrite an existing file
+	overwrittenContent := []byte("This content overwrites the previous one.")
+	err = WriteBytesToFile(tempFile, overwrittenContent)
+	if err != nil {
+		t.Errorf("WriteBytesToFile() error = %v", err)
+		return
+	}
+
+	// Verify the content of the file
+	readContent, err = os.ReadFile(tempFile)
+	if err != nil {
+		t.Errorf("ReadFile() error = %v", err)
+		return
+	}
+	if !reflect.DeepEqual(overwrittenContent, readContent) {
+		t.Errorf("WriteBytesToFile() did not overwrite the file correctly")
+	}
+
+	// Test case 3: Error when opening file
+	err = WriteBytesToFile("/invalid/path/test.txt", content)
+	if err == nil {
+		t.Error("WriteBytesToFile() expected error, got nil")
+	}
+}
+
+func TestWriteBytesToFile_ErrorOnCreate(t *testing.T) {
+	// Use a directory that doesn't exist to force an error
+	invalidFilePath := "/invalid/path/test.txt"
+	content := []byte("test data")
+
+	err := WriteBytesToFile(invalidFilePath, content)
+	if err == nil {
+		t.Error("WriteBytesToFile() expected error, got nil")
+	}
+
+	var pathError *fs.PathError
+	if !errors.As(err, &pathError) {
+		t.Errorf("Expected error to be a *fs.PathError, got %T", err)
+	}
+}
+
+func TestReadFile(t *testing.T) {
+	// Test case 1: Valid URL
+	svr := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, "Hello, client")
+		}))
+	defer svr.Close()
+
+	reader, closeFn, err := ReadFile(svr.URL)
+	if err != nil {
+		t.Errorf("ReadFile() error = %v", err)
+		return
+	}
+	defer closeFn()
+
+	body, err := io.ReadAll(reader)
+	if err != nil {
+		t.Errorf("ReadAll() error = %v", err)
+		return
+	}
+
+	expectedBody := "Hello, client\n"
+	if string(body) != expectedBody {
+		t.Errorf("ReadFile() read = %v, want %v", string(body), expectedBody)
+	}
+
+	// Test case 2: Invalid URL
+	invalidURL := "invalid://url"
+	_, _, err = ReadFile(invalidURL)
+	if err == nil {
+		t.Error("ReadFile() expected error, got nil")
+		return
+	}
+
+	// Test case 3: Valid local file path
+	tempFile, err := os.CreateTemp("", "testfile")
+	if err != nil {
+		t.Fatalf("Create temp file failed: %v", err)
+	}
+	defer os.Remove(tempFile.Name())
+
+	testData := []byte("Hello, local file")
+	if _, err := tempFile.Write(testData); err != nil {
+		t.Fatalf("Write temp file failed: %v", err)
+	}
+	if err := tempFile.Close(); err != nil {
+		t.Fatalf("Close temp file failed: %v", err)
+	}
+
+	reader, closeFn, err = ReadFile(tempFile.Name())
+	if err != nil {
+		t.Errorf("ReadFile() error = %v", err)
+		return
+	}
+	defer closeFn()
+
+	body, err = io.ReadAll(reader)
+	if err != nil {
+		t.Errorf("ReadAll() error = %v", err)
+		return
+	}
+
+	if string(body) != string(testData) {
+		t.Errorf("ReadFile() read = %v, want %v", string(body), string(testData))
+	}
+
+	// Test case 4: Invalid local file path
+	invalidFilePath := "/path/to/non/existing/file"
+	_, _, err = ReadFile(invalidFilePath)
+	if err == nil {
+		t.Error("ReadFile() expected error, got nil")
+		return
+	}
+
+	// Test case 5: Unknown file type
+	_, _, err = ReadFile("unknown.xyz")
+	if err == nil {
+		t.Error("ReadFile() expected error, got nil")
 	}
 }
