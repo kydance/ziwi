@@ -147,3 +147,12 @@ func CeilToStr[T constraints.Float | constraints.Integer](x T, n int) string {
 	r := math.Ceil(float64(x))
 	return strconv.FormatFloat(r/temp, 'f', n, 64)
 }
+
+// Sum returns sum of all passed values.
+func Sum[T constraints.Float | constraints.Integer](vs ...T) T {
+	var sum T
+	for _, v := range vs {
+		sum += v
+	}
+	return sum
+}

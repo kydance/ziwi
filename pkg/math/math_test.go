@@ -1,6 +1,7 @@
 package math
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -323,4 +324,26 @@ func TestCeilToStr(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSum(t *testing.T) {
+	t.Run("Integer", func(t *testing.T) {
+		if got := Sum([]int{1, 2, 3, 4, 5}...); !reflect.DeepEqual(got, 15) {
+			t.Errorf("Sum() = %v, want %v", got, 15)
+		}
+	})
+
+	t.Run("nil", func(t *testing.T) {
+		if got := Sum([]int{}...); !reflect.DeepEqual(got, 0) {
+			t.Errorf("Sum() = %v, want %v", got, 0)
+		}
+	})
+
+	t.Run("Float64", func(t *testing.T) {
+		if got := Sum([]float64{
+			1.1, 2.2, 3.3, 4.4, 5.5,
+		}...); !reflect.DeepEqual(got, 16.5) {
+			t.Errorf("Sum() = %v, want %v", got, 16.5)
+		}
+	})
 }
