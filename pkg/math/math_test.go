@@ -196,3 +196,131 @@ func TestTruncRound(t *testing.T) {
 		})
 	}
 }
+
+func TestFloorToFloat(t *testing.T) {
+	type args struct {
+		x any
+		n int
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{"Round float64 to 2 decimals", args{123.456789, 2}, 123.45},
+		{"Round int to 2 decimals", args{123, 2}, 123.00},
+		{"Round negative float64 to 2 decimals", args{-123.456789, 2}, -123.46},
+		{"Round float64 to 0 decimals", args{123.456789, 0}, 123.0},
+		{"Round float64 to 5 decimals", args{123.456789, 5}, 123.45678},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch x := tt.args.x.(type) {
+			case float64:
+				if got := FloorToFloat(x, tt.args.n); got != tt.want {
+					t.Errorf("FloorToFloat() = %v, want %v", got, tt.want)
+				}
+			case int:
+				if got := FloorToFloat(x, tt.args.n); got != tt.want {
+					t.Errorf("FloorToFloat() = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestFloorToStr(t *testing.T) {
+	type args struct {
+		x any
+		n int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"Round float64 to 2 decimals", args{123.456789, 2}, "123.45"},
+		{"Round int to 2 decimals", args{123, 2}, "123.00"},
+		{"Round negative float64 to 2 decimals", args{-123.456789, 2}, "-123.46"},
+		{"Round float64 to 0 decimals", args{123.456789, 0}, "123"},
+		{"Round float64 to 5 decimals", args{123.456789, 5}, "123.45678"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch x := tt.args.x.(type) {
+			case float64:
+				if got := FloorToStr(x, tt.args.n); got != tt.want {
+					t.Errorf("FloorToStr() = %v, want %v", got, tt.want)
+				}
+			case int:
+				if got := FloorToStr(x, tt.args.n); got != tt.want {
+					t.Errorf("FloorToStr() = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestCeilToFloat(t *testing.T) {
+	type args struct {
+		x any
+		n int
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{"Round float64 to 2 decimals", args{123.456789, 2}, 123.46},
+		{"Round int to 2 decimals", args{123, 2}, 123.00},
+		{"Round negative float64 to 2 decimals", args{-123.456789, 2}, -123.45},
+		{"Round float64 to 0 decimals", args{123.456789, 0}, 124.0},
+		{"Round float64 to 5 decimals", args{123.456789, 5}, 123.45679},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch x := tt.args.x.(type) {
+			case float64:
+				if got := CeilToFloat(x, tt.args.n); got != tt.want {
+					t.Errorf("CeilToFloat() = %v, want %v", got, tt.want)
+				}
+			case int:
+				if got := CeilToFloat(x, tt.args.n); got != tt.want {
+					t.Errorf("CeilToFloat() = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestCeilToStr(t *testing.T) {
+	type args struct {
+		x any
+		n int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"Round float64 to 2 decimals", args{123.456789, 2}, "123.46"},
+		{"Round int to 2 decimals", args{123, 2}, "123.00"},
+		{"Round negative float64 to 2 decimals", args{-123.456789, 2}, "-123.45"},
+		{"Round float64 to 0 decimals", args{123.456789, 0}, "124"},
+		{"Round float64 to 5 decimals", args{123.456789, 5}, "123.45679"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch x := tt.args.x.(type) {
+			case float64:
+				if got := CeilToStr(x, tt.args.n); got != tt.want {
+					t.Errorf("CeilToStr() = %v, want %v", got, tt.want)
+				}
+			case int:
+				if got := CeilToStr(x, tt.args.n); got != tt.want {
+					t.Errorf("CeilToStr() = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}

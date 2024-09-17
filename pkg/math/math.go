@@ -117,3 +117,33 @@ func TruncRound[T constraints.Float | constraints.Integer](x T, n int) T {
 	// Convert the result back to the original type and return it
 	return T(result)
 }
+
+// FloorToFloat round down to n decimal places.
+func FloorToFloat[T constraints.Float | constraints.Integer](x T, n int) float64 {
+	temp := math.Pow(10.0, float64(n))
+	x *= T(temp)
+	return math.Floor(float64(x)) / temp
+}
+
+// FloorToStr round down to n decimal places.
+func FloorToStr[T constraints.Float | constraints.Integer](x T, n int) string {
+	temp := math.Pow(10.0, float64(n))
+	x *= T(temp)
+	r := math.Floor(float64(x))
+	return strconv.FormatFloat(r/temp, 'f', n, 64)
+}
+
+// CeilToFloat round up to n decimal places.
+func CeilToFloat[T constraints.Float | constraints.Integer](x T, n int) float64 {
+	temp := math.Pow(10.0, float64(n))
+	x *= T(temp)
+	return math.Ceil(float64(x)) / temp
+}
+
+// CeilToStr round up to n decimal places.
+func CeilToStr[T constraints.Float | constraints.Integer](x T, n int) string {
+	temp := math.Pow(10.0, float64(n))
+	x *= T(temp)
+	r := math.Ceil(float64(x))
+	return strconv.FormatFloat(r/temp, 'f', n, 64)
+}
