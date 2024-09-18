@@ -347,3 +347,19 @@ func TestSum(t *testing.T) {
 		}
 	})
 }
+
+func TestAverage(t *testing.T) {
+	t.Run("Ingerget", func(t *testing.T) {
+		var want int = 3
+		if got := Average([]int{1, 2, 3, 4, 5}...); got != want {
+			t.Errorf("Average() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("Float64", func(t *testing.T) {
+		var want float64 = 3.1
+		if got := Average([]float64{1.0, 2.0, 3.5, 4.0, 5.0}...); got != want {
+			t.Errorf("Average() = %v, want %v", got, want)
+		}
+	})
+}

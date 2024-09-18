@@ -156,3 +156,8 @@ func Sum[T constraints.Float | constraints.Integer](vs ...T) T {
 	}
 	return sum
 }
+
+// Average returns the average of all passed values.
+func Average[T constraints.Float | constraints.Integer](vs ...T) T {
+	return Sum(vs...) / T(len(vs))
+}
