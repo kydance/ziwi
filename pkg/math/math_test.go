@@ -363,3 +363,51 @@ func TestAverage(t *testing.T) {
 		}
 	})
 }
+
+func TestGCD(t *testing.T) {
+	type args struct {
+		integers []int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"Test case 1", args{[]int{12, 18}}, 6},
+		{"Test case 2", args{[]int{12, 18, 24}}, 6},
+		{"Test case 3", args{[]int{10, 25, 5}}, 5},
+		{"Test case 4", args{[]int{7, 13}}, 1},
+		{"Test case 5", args{[]int{100, 1000}}, 100},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GCD(tt.args.integers...); got != tt.want {
+				t.Errorf("GCD() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLCM(t *testing.T) {
+	type args struct {
+		integers []int
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"Test case 1", args{[]int{12, 18}}, 36},
+		{"Test case 2", args{[]int{12, 18, 24}}, 72},
+		{"Test case 3", args{[]int{10, 25, 5}}, 50},
+		{"Test case 4", args{[]int{7, 13}}, 91},
+		{"Test case 5", args{[]int{100, 1000}}, 1000},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := LCM(tt.args.integers...); got != tt.want {
+				t.Errorf("LCM() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

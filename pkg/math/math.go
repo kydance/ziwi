@@ -161,3 +161,99 @@ func Sum[T constraints.Float | constraints.Integer](vs ...T) T {
 func Average[T constraints.Float | constraints.Integer](vs ...T) T {
 	return Sum(vs...) / T(len(vs))
 }
+
+// Range returns a slice of numbers from start to start+count step by step.
+func Range[T constraints.Integer | constraints.Float](start T, count int) []T {
+	size := count
+	if count < 0 {
+		size = -count
+	}
+
+	ret := make([]T, size)
+	for i, j := 0, start; i < size; i, j = i+1, j+1 {
+		ret[i] = j
+	}
+
+	return ret
+}
+
+// RangeWithStep creates a slice of numbers from start to end with specified step.
+func RangeWithStep[T constraints.Integer | constraints.Float](start, end, step T) []T {
+	ret := []T{}
+
+	if start >= end || step == 0 {
+		return ret
+	}
+
+	for i := start; i < end; i += step {
+		ret = append(ret, i)
+	}
+
+	return ret
+}
+
+// AngleToRadian converts angle value to radian value.
+func AngleToRadian(angle float64) float64 {
+	return angle * (math.Pi / 180)
+}
+
+// RadianToAngle converts radian value to angle value.
+func RadianToAngle(radian float64) float64 {
+	return radian * (180 / math.Pi)
+}
+
+// IsPrime checks if value is primer number.
+func IsPrime(val int) bool {
+	if val < 2 {
+		return false
+	}
+
+	for i := 2; i <= int(math.Sqrt(float64(val))); i++ {
+		if val%i == 0 {
+			return false
+		}
+	}
+
+	return true
+}
+
+// GCD returns greatest common divisor (GCD) of passed integers.
+func GCD[T constraints.Integer](integers ...T) T {
+	ret := integers[0]
+
+	for k := range integers {
+		ret = gcd(ret, integers[k])
+
+		if ret == 1 {
+			return 1
+		}
+	}
+
+	return ret
+}
+
+func gcd[T constraints.Integer](a, b T) T {
+	if b == 0 {
+		return a
+	}
+	return gcd(b, a%b)
+}
+
+// LCM returns least common multiple (LCM) of passed integers.
+func LCM[T constraints.Integer](integers ...T) T {
+	ret := integers[0]
+
+	for i := range integers {
+		ret = lcm(integers[i], ret)
+	}
+
+	return ret
+}
+
+func lcm[T constraints.Integer](a, b T) T {
+	if a == 0 || b == 0 {
+		panic("LCM: provide non zero integers only.")
+	}
+
+	return a * b / gcd(a, b)
+}
