@@ -14,15 +14,10 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
-	"encoding/csv"
-	"sort"
-	"sync"
-
-	// #nosec
-	"crypto/sha1"
-
+	"crypto/sha1" //nolint
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"hash"
@@ -31,6 +26,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
+	"sync"
 
 	"github.com/kydance/ziwi/pkg/strutil"
 )
@@ -619,7 +616,8 @@ func WriteCSV(file string, records [][]string, append bool, delimiter ...rune) e
 //	app: true -> records will be appended to the file if exists.
 //	headers: order of the csv column headers, needs to be consistent with the key of the map.
 func WriteMapsToCSV(file string, records []map[string]any,
-	app bool, delimiter rune, headers ...[]string) error {
+	app bool, delimiter rune, headers ...[]string,
+) error {
 	for _, record := range records {
 		for _, value := range record {
 			if !isCsvSupportedType(value) {

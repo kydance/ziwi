@@ -64,7 +64,13 @@ func TestSplitIntoStrings(t *testing.T) {
 	for _, test := range tests {
 		result := splitIntoStrings(test.input, test.upper)
 		if !equalStringSlices(result, test.expected) {
-			t.Errorf("splitIntoStrings(%q, %v) = %v; expected %v", test.input, test.upper, result, test.expected)
+			t.Errorf(
+				"splitIntoStrings(%q, %v) = %v; expected %v",
+				test.input,
+				test.upper,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -97,7 +103,15 @@ func TestPadAtPosEdgeCases(t *testing.T) {
 	for _, test := range tests {
 		result := padAtPos(test.str, test.size, test.pad, test.pos)
 		if result != test.want {
-			t.Errorf("padAtPos(%q, %d, %q, %d) = %q; expected %q", test.str, test.size, test.pad, test.pos, result, test.want)
+			t.Errorf(
+				"padAtPos(%q, %d, %q, %d) = %q; expected %q",
+				test.str,
+				test.size,
+				test.pad,
+				test.pos,
+				result,
+				test.want,
+			)
 		}
 	}
 }

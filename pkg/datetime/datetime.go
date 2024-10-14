@@ -265,7 +265,7 @@ func (d *DateTime) EndOfDay() time.Time {
 
 // BeginOfWeek returns beginning week, default week begin from Sunday.
 func (d *DateTime) BeginOfWeek(begFrom ...time.Weekday) time.Time {
-	var begFromWeek = time.Sunday
+	begFromWeek := time.Sunday
 	if len(begFrom) > 0 {
 		begFromWeek = begFrom[0]
 	}
@@ -282,7 +282,7 @@ func (d *DateTime) BeginOfWeek(begFrom ...time.Weekday) time.Time {
 
 // EndOfWeek returns ending week, default week end to Saturday.
 func (d *DateTime) EndOfWeek(endWith ...time.Weekday) time.Time {
-	var endWithWeek = time.Saturday
+	endWithWeek := time.Saturday
 	if len(endWith) > 0 {
 		endWithWeek = endWith[0]
 	}

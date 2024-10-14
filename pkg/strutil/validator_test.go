@@ -782,7 +782,13 @@ func TestIsRegexMatch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			actual := IsRegexMatch(tt.input, tt.regex)
 			if actual != tt.expected {
-				t.Errorf("IsRegexMatch(%q, %q) = %v; want %v", tt.input, tt.regex, actual, tt.expected)
+				t.Errorf(
+					"IsRegexMatch(%q, %q) = %v; want %v",
+					tt.input,
+					tt.regex,
+					actual,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -812,7 +818,13 @@ func TestIsStrongPassword(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			actual := IsStrongPassword(tt.input, tt.length)
 			if actual != tt.expected {
-				t.Errorf("IsStrongPassword(%q, %d) = %v; want %v", tt.input, tt.length, actual, tt.expected)
+				t.Errorf(
+					"IsStrongPassword(%q, %d) = %v; want %v",
+					tt.input,
+					tt.length,
+					actual,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -1083,9 +1095,21 @@ func TestIsJWT(t *testing.T) {
 		input    string
 		expected bool
 	}{
-		{"Valid JWT", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", true},
-		{"Invalid JWT - incorrect segment count", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ", false},
-		{"Invalid JWT - not Base64URL encoded", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV/adQssw5c.", false},
+		{
+			"Valid JWT",
+			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+			true,
+		},
+		{
+			"Invalid JWT - incorrect segment count",
+			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ",
+			false,
+		},
+		{
+			"Invalid JWT - not Base64URL encoded",
+			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV/adQssw5c.",
+			false,
+		},
 		{"Empty string", "", false},
 		{"Too short to be a JWT", "a.b.c", false},
 	}
@@ -1152,7 +1176,12 @@ func TestIsAmericanExpress(t *testing.T) {
 	for _, test := range tests {
 		result := IsAmericanExpress(test.cardNumber)
 		if result != test.expected {
-			t.Errorf("IsAmericanExpress(%q) = %v; expected %v", test.cardNumber, result, test.expected)
+			t.Errorf(
+				"IsAmericanExpress(%q) = %v; expected %v",
+				test.cardNumber,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -1188,7 +1217,12 @@ func TestIsChinaUnionPay(t *testing.T) {
 	for _, test := range tests {
 		result := IsChinaUnionPay(test.cardNumber)
 		if result != test.expected {
-			t.Errorf("IsChinaUnionPay(%q) = %v; expected %v", test.cardNumber, result, test.expected)
+			t.Errorf(
+				"IsChinaUnionPay(%q) = %v; expected %v",
+				test.cardNumber,
+				result,
+				test.expected,
+			)
 		}
 	}
 }

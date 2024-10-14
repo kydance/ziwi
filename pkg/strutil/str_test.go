@@ -136,7 +136,14 @@ func TestPad(t *testing.T) {
 	for _, test := range tests {
 		result := Pad(test.src, test.size, test.pad)
 		if result != test.result {
-			t.Errorf("Pad(%q, %d, %q) = %q; expected %q", test.src, test.size, test.pad, result, test.result)
+			t.Errorf(
+				"Pad(%q, %d, %q) = %q; expected %q",
+				test.src,
+				test.size,
+				test.pad,
+				result,
+				test.result,
+			)
 		}
 	}
 }
@@ -158,7 +165,14 @@ func TestPadLeft(t *testing.T) {
 	for _, test := range tests {
 		result := PadLeft(test.src, test.size, test.pad)
 		if result != test.result {
-			t.Errorf("PadLeft(%q, %d, %q) = %q; expected %.sql", test.src, test.size, test.pad, result, test.result)
+			t.Errorf(
+				"PadLeft(%q, %d, %q) = %q; expected %.sql",
+				test.src,
+				test.size,
+				test.pad,
+				result,
+				test.result,
+			)
 		}
 	}
 }
@@ -180,7 +194,14 @@ func TestPadRight(t *testing.T) {
 	for _, test := range tests {
 		result := PadRight(test.src, test.size, test.pad)
 		if result != test.result {
-			t.Errorf("PadRight(%q, %d, %q) = %q; expected %q", test.src, test.size, test.pad, result, test.result)
+			t.Errorf(
+				"PadRight(%q, %d, %q) = %q; expected %q",
+				test.src,
+				test.size,
+				test.pad,
+				result,
+				test.result,
+			)
 		}
 	}
 }
@@ -318,7 +339,13 @@ func TestBefore(t *testing.T) {
 	for _, test := range tests {
 		result := Before(test.input, test.sep)
 		if result != test.expected {
-			t.Errorf("Before(%q, %q) = %q; expected %q", test.input, test.sep, result, test.expected)
+			t.Errorf(
+				"Before(%q, %q) = %q; expected %q",
+				test.input,
+				test.sep,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -347,7 +374,13 @@ func TestBeforeLast(t *testing.T) {
 	for _, test := range tests {
 		result := BeforeLast(test.input, test.ch)
 		if result != test.expected {
-			t.Errorf("BeforeLast(%q, %q) = %q; expected %q", test.input, test.ch, result, test.expected)
+			t.Errorf(
+				"BeforeLast(%q, %q) = %q; expected %q",
+				test.input,
+				test.ch,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -394,7 +427,13 @@ func TestAfterLast(t *testing.T) {
 	for _, test := range tests {
 		result := AfterLast(test.str, test.ch)
 		if result != test.expected {
-			t.Errorf("AfterLast(%q, %q) = %q; expected %q", test.str, test.ch, result, test.expected)
+			t.Errorf(
+				"AfterLast(%q, %q) = %q; expected %q",
+				test.str,
+				test.ch,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -496,7 +535,13 @@ func TestUnWarp(t *testing.T) {
 	for _, test := range tests {
 		result := UnWarp(test.input, test.sWarp)
 		if result != test.expected {
-			t.Errorf("UnWarp(%q, %q) = %q; expected %q", test.input, test.sWarp, result, test.expected)
+			t.Errorf(
+				"UnWarp(%q, %q) = %q; expected %q",
+				test.input,
+				test.sWarp,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -525,7 +570,14 @@ func TestSubString(t *testing.T) {
 	for _, test := range tests {
 		result := SubString(test.src, test.begin, test.size)
 		if result != test.result {
-			t.Errorf("SubString(%q, %d, %d) = %q; expected %q", test.src, test.begin, test.size, result, test.result)
+			t.Errorf(
+				"SubString(%q, %d, %d) = %q; expected %q",
+				test.src,
+				test.begin,
+				test.size,
+				result,
+				test.result,
+			)
 		}
 	}
 }
@@ -664,7 +716,13 @@ func TestHasPrefixAny(t *testing.T) {
 	for _, test := range tests {
 		result := HasPrefixAny(test.str, test.prefixs...)
 		if result != test.expected {
-			t.Errorf("HasPrefixAny(%q, %v) = %v; expected %v", test.str, test.prefixs, result, test.expected)
+			t.Errorf(
+				"HasPrefixAny(%q, %v) = %v; expected %v",
+				test.str,
+				test.prefixs,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -692,7 +750,13 @@ func TestHasSuffixAny(t *testing.T) {
 	for _, test := range tests {
 		result := HasSuffixAny(test.str, test.suffixs...)
 		if result != test.expected {
-			t.Errorf("HasSuffixAny(%q, %v) = %v; expected %v", test.str, test.suffixs, result, test.expected)
+			t.Errorf(
+				"HasSuffixAny(%q, %v) = %v; expected %v",
+				test.str,
+				test.suffixs,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -718,7 +782,14 @@ func TestIndexOffset(t *testing.T) {
 	for _, test := range tests {
 		result := IndexOffset(test.str, test.substr, test.offset)
 		if result != test.expected {
-			t.Errorf("IndexOffset(%q, %q, %d) = %d; expected %d", test.str, test.substr, test.offset, result, test.expected)
+			t.Errorf(
+				"IndexOffset(%q, %q, %d) = %d; expected %d",
+				test.str,
+				test.substr,
+				test.offset,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -745,7 +816,13 @@ func TestReplaceWithMap(t *testing.T) {
 	for _, test := range tests {
 		result := ReplaceWithMap(test.str, test.replaceMap)
 		if result != test.expected {
-			t.Errorf("ReplaceWithMap(%q, %v) = %q; expected %q", test.str, test.replaceMap, result, test.expected)
+			t.Errorf(
+				"ReplaceWithMap(%q, %v) = %q; expected %q",
+				test.str,
+				test.replaceMap,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -767,7 +844,13 @@ func TestTrim(t *testing.T) {
 	for _, test := range tests {
 		result := Trim(test.input, test.cutset)
 		if result != test.expected {
-			t.Errorf("Trim(%q, %q) = %q; expected %q", test.input, test.cutset, result, test.expected)
+			t.Errorf(
+				"Trim(%q, %q) = %q; expected %q",
+				test.input,
+				test.cutset,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -789,7 +872,14 @@ func TestSplitAndTrim(t *testing.T) {
 	for _, test := range tests {
 		result := SplitAndTrim(test.input, test.delimeter, test.cutset)
 		if !reflect.DeepEqual(result, test.expected) {
-			t.Errorf("SplitAndTrim(%q, %q, %q) = %v; expected %v", test.input, test.delimeter, test.cutset, result, test.expected)
+			t.Errorf(
+				"SplitAndTrim(%q, %q, %q) = %v; expected %v",
+				test.input,
+				test.delimeter,
+				test.cutset,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -817,7 +907,15 @@ func TestHideString(t *testing.T) {
 	for _, test := range tests {
 		result := HideString(test.src, test.beg, test.end, test.hideChar)
 		if result != test.expected {
-			t.Errorf("HideString(%q, %d, %d, %q) = %q; expected %q", test.src, test.beg, test.end, test.hideChar, result, test.expected)
+			t.Errorf(
+				"HideString(%q, %d, %d, %q) = %q; expected %q",
+				test.src,
+				test.beg,
+				test.end,
+				test.hideChar,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -902,7 +1000,13 @@ func TestRemoveWhiteSpace(t *testing.T) {
 	for _, test := range tests {
 		result := RemoveWhiteSpace(test.input, test.rmAll)
 		if result != test.expected {
-			t.Errorf("RemoveWhiteSpace(%q, %v) = %q; expected %q", test.input, test.rmAll, result, test.expected)
+			t.Errorf(
+				"RemoveWhiteSpace(%q, %v) = %q; expected %q",
+				test.input,
+				test.rmAll,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -929,7 +1033,14 @@ func TestSubInBetween(t *testing.T) {
 	for _, test := range tests {
 		result := SubInBetween(test.str, test.beg, test.end)
 		if result != test.expected {
-			t.Errorf("SubInBetween(%q, %q, %q) = %q; expected %q", test.str, test.beg, test.end, result, test.expected)
+			t.Errorf(
+				"SubInBetween(%q, %q, %q) = %q; expected %q",
+				test.str,
+				test.beg,
+				test.end,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -953,7 +1064,12 @@ func TestHammingDistance(t *testing.T) {
 	for _, test := range tests {
 		result, err := HammingDistance(test.str1, test.str2)
 		if err != nil && test.expectedErr == nil {
-			t.Errorf("HammingDistance(%q, %q) returned unexpected error: %v", test.str1, test.str2, err)
+			t.Errorf(
+				"HammingDistance(%q, %q) returned unexpected error: %v",
+				test.str1,
+				test.str2,
+				err,
+			)
 		} else if err == nil && test.expectedErr != nil {
 			t.Errorf("HammingDistance(%q, %q) did not return expected error: %v", test.str1, test.str2, test.expectedErr)
 		} else if err != nil && test.expectedErr != nil && err.Error() != test.expectedErr.Error() {
@@ -1021,7 +1137,13 @@ func TestRotate(t *testing.T) {
 	for _, test := range tests {
 		result := Rotate(test.input, test.shift)
 		if result != test.expected {
-			t.Errorf("Rotate(%q, %d) = %q; expected %q", test.input, test.shift, result, test.expected)
+			t.Errorf(
+				"Rotate(%q, %d) = %q; expected %q",
+				test.input,
+				test.shift,
+				result,
+				test.expected,
+			)
 		}
 	}
 }
@@ -1046,10 +1168,14 @@ func TestRegexMatchAllGroups(t *testing.T) {
 			expected: [][]string{{"12", "12"}},
 		},
 		{
-			name:     "全局匹配测试",
-			str:      "abc123abc",
-			pattern:  `(\w)(\w)(\w)`,
-			expected: [][]string{{"abc", "a", "b", "c"}, {"123", "1", "2", "3"}, {"abc", "a", "b", "c"}},
+			name:    "全局匹配测试",
+			str:     "abc123abc",
+			pattern: `(\w)(\w)(\w)`,
+			expected: [][]string{
+				{"abc", "a", "b", "c"},
+				{"123", "1", "2", "3"},
+				{"abc", "a", "b", "c"},
+			},
 		},
 		{
 			name:    "复杂模式测试",
@@ -1068,7 +1194,13 @@ func TestRegexMatchAllGroups(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			actual := RegexMatchAllGroups(tt.str, tt.pattern)
 			if !reflect.DeepEqual(actual, tt.expected) {
-				t.Errorf("RegexMatchAllGroups(%q, %q) = %v; want %v", tt.str, tt.pattern, actual, tt.expected)
+				t.Errorf(
+					"RegexMatchAllGroups(%q, %q) = %v; want %v",
+					tt.str,
+					tt.pattern,
+					actual,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -1093,7 +1225,13 @@ func TestConcat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			actual := Concat(tt.length, tt.strings...)
 			if actual != tt.expected {
-				t.Errorf("Concat(%d, %v) = %q; expected %q", tt.length, tt.strings, actual, tt.expected)
+				t.Errorf(
+					"Concat(%d, %v) = %q; expected %q",
+					tt.length,
+					tt.strings,
+					actual,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -1116,7 +1254,13 @@ func TestEllipsis(t *testing.T) {
 	for _, test := range tests {
 		result := Ellipsis(test.str, test.size)
 		if result != test.expected {
-			t.Errorf("Ellipsis(%q, %d) = %q; expected %q", test.str, test.size, result, test.expected)
+			t.Errorf(
+				"Ellipsis(%q, %d) = %q; expected %q",
+				test.str,
+				test.size,
+				result,
+				test.expected,
+			)
 		}
 	}
 }

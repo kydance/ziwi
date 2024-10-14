@@ -19,11 +19,13 @@ func TestNewDateTimeFromTime(t *testing.T) {
 	testTime := time.Date(2024, 11, 20, 12, 34, 56, 0, time.UTC)
 	dt := NewDateTimeFromTime(testTime)
 
-	if dt.tm.Year() != testTime.Year() || dt.tm.Month() != testTime.Month() || dt.tm.Day() != testTime.Day() {
+	if dt.tm.Year() != testTime.Year() || dt.tm.Month() != testTime.Month() ||
+		dt.tm.Day() != testTime.Day() {
 		t.Errorf("NewDateTimeFromTime() failed, expected date to match provided date")
 	}
 
-	if dt.tm.Hour() != testTime.Hour() || dt.tm.Minute() != testTime.Minute() || dt.tm.Second() != testTime.Second() {
+	if dt.tm.Hour() != testTime.Hour() || dt.tm.Minute() != testTime.Minute() ||
+		dt.tm.Second() != testTime.Second() {
 		t.Errorf("NewDateTimeFromTime() failed, expected time to match provided time")
 	}
 }
@@ -202,7 +204,12 @@ func TestDateTime_AddMinute(t *testing.T) {
 
 	year, month, day := dt.Date()
 	if year != 2024 || month != 9 || day != 10 {
-		t.Errorf("DateTime.AddMinute() date error, got = %d-%d-%d, want = 2024-09-10", year, month, day)
+		t.Errorf(
+			"DateTime.AddMinute() date error, got = %d-%d-%d, want = 2024-09-10",
+			year,
+			month,
+			day,
+		)
 	}
 
 	hour, min, sec := dt.tm.Hour(), dt.tm.Minute(), dt.tm.Second()
@@ -217,7 +224,12 @@ func TestDateTime_AddHour(t *testing.T) {
 
 	year, month, day := dt.Date()
 	if year != 2024 || month != 9 || day != 11 {
-		t.Errorf("DateTime.AddHour() date error, got = %d-%d-%d, want = 2024-09-11", year, month, day)
+		t.Errorf(
+			"DateTime.AddHour() date error, got = %d-%d-%d, want = 2024-09-11",
+			year,
+			month,
+			day,
+		)
 	}
 
 	hour, min, sec := dt.tm.Hour(), dt.tm.Minute(), dt.tm.Second()
@@ -232,7 +244,12 @@ func TestDateTime_AddDay(t *testing.T) {
 
 	year, month, day := dt.Date()
 	if year != 2024 || month != 9 || day != 11 {
-		t.Errorf("DateTime.AddDay() date error, got = %d-%d-%d, want = 2024-09-11", year, month, day)
+		t.Errorf(
+			"DateTime.AddDay() date error, got = %d-%d-%d, want = 2024-09-11",
+			year,
+			month,
+			day,
+		)
 	}
 
 	hour, min, sec := dt.tm.Hour(), dt.tm.Minute(), dt.tm.Second()
@@ -247,7 +264,12 @@ func TestDateTime_AddYear(t *testing.T) {
 
 	year, month, day := dt.Date()
 	if year != 2025 || month != 9 || day != 10 {
-		t.Errorf("DateTime.AddYear() date error, got = %d-%d-%d, want = 2025-09-10", year, month, day)
+		t.Errorf(
+			"DateTime.AddYear() date error, got = %d-%d-%d, want = 2025-09-10",
+			year,
+			month,
+			day,
+		)
 	}
 
 	hour, min, sec := dt.tm.Hour(), dt.tm.Minute(), dt.tm.Second()
@@ -504,12 +526,16 @@ func TestDateTime_ZeroHourTimestamp(t *testing.T) {
 	}{
 		{
 			name: "Test case 1",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 0, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 0, time.FixedZone("CST", 8*3600)),
+			},
 			want: 1725897600,
 		},
 		{
 			name: "Test case 2",
-			dt:   &DateTime{tm: time.Date(2024, 12, 31, 23, 59, 59, 0, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 12, 31, 23, 59, 59, 0, time.FixedZone("CST", 8*3600)),
+			},
 			want: 1735574400,
 		},
 	}
@@ -530,12 +556,16 @@ func TestDateTime_NightTimestamp(t *testing.T) {
 	}{
 		{
 			name: "Test case 1",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 0, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 0, time.FixedZone("CST", 8*3600)),
+			},
 			want: 1725983999,
 		},
 		{
 			name: "Test case 2",
-			dt:   &DateTime{tm: time.Date(2024, 12, 31, 23, 59, 59, 0, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 12, 31, 23, 59, 59, 0, time.FixedZone("CST", 8*3600)),
+			},
 			want: 1735660799,
 		},
 	}
@@ -556,7 +586,9 @@ func TestDateTime_BeginOfMinute(t *testing.T) {
 	}{
 		{
 			name: "Test case 1",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: time.Date(2024, 9, 10, 10, 24, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -577,7 +609,9 @@ func TestDateTime_EndOfMinute(t *testing.T) {
 	}{
 		{
 			name: "Test case 1",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: time.Date(2024, 9, 10, 10, 24, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -598,7 +632,9 @@ func TestDateTime_BeginOfHour(t *testing.T) {
 	}{
 		{
 			name: "Test case 1",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: time.Date(2024, 9, 10, 10, 0, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -619,7 +655,9 @@ func TestDateTime_EndOfHour(t *testing.T) {
 	}{
 		{
 			name: "Test case 1",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: time.Date(2024, 9, 10, 10, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -640,7 +678,9 @@ func TestDateTime_BeginOfDay(t *testing.T) {
 	}{
 		{
 			name: "Test case 1",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: time.Date(2024, 9, 10, 0, 0, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -661,7 +701,9 @@ func TestDateTime_EndOfDay(t *testing.T) {
 	}{
 		{
 			name: "Test case 1",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: time.Date(2024, 9, 10, 23, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -682,20 +724,27 @@ func TestDateTime_BeginOfWeek(t *testing.T) {
 		wantTime time.Time
 	}{
 		{
-			name:     "Test case 1: Default Sunday",
-			dt:       &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			name: "Test case 1: Default Sunday",
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			wantTime: time.Date(2024, 9, 8, 0, 0, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 		{
-			name:     "Test case 2: Monday",
-			dt:       &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			name: "Test case 2: Monday",
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			begFrom:  []time.Weekday{time.Monday},
 			wantTime: time.Date(2024, 9, 9, 0, 0, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotTime := tt.dt.BeginOfWeek(tt.begFrom...); !reflect.DeepEqual(gotTime, tt.wantTime) {
+			if gotTime := tt.dt.BeginOfWeek(tt.begFrom...); !reflect.DeepEqual(
+				gotTime,
+				tt.wantTime,
+			) {
 				t.Errorf("DateTime.BeginOfWeek() = %v, want %v", gotTime, tt.wantTime)
 			}
 		})
@@ -710,13 +759,17 @@ func TestDateTime_EndOfWeek(t *testing.T) {
 		wantTime time.Time
 	}{
 		{
-			name:     "Test case 1: Default Saturday",
-			dt:       &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			name: "Test case 1: Default Saturday",
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			wantTime: time.Date(2024, 9, 14, 23, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 		{
-			name:     "Test case 2: Friday",
-			dt:       &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			name: "Test case 2: Friday",
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			endWith:  []time.Weekday{time.Friday},
 			wantTime: time.Date(2024, 9, 13, 23, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
@@ -738,7 +791,9 @@ func TestDateTime_BeginOfMonth(t *testing.T) {
 	}{
 		{
 			name: "Test case 1",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: time.Date(2024, 9, 1, 0, 0, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -759,12 +814,16 @@ func TestDateTime_EndOfMonth(t *testing.T) {
 	}{
 		{
 			name: "Test case 1",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: time.Date(2024, 9, 30, 23, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 		{
 			name: "Test case 2: Leap year",
-			dt:   &DateTime{tm: time.Date(2024, 2, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 2, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: time.Date(2024, 2, 29, 23, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -785,7 +844,9 @@ func TestDateTime_BeginOfYear(t *testing.T) {
 	}{
 		{
 			name: "Test case 1",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: time.Date(2024, 1, 1, 0, 0, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -806,7 +867,9 @@ func TestDateTime_EndOfYear(t *testing.T) {
 	}{
 		{
 			name: "Test case 1",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: time.Date(2024, 12, 31, 23, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -842,7 +905,9 @@ func TestDateTime_DayOfYear(t *testing.T) {
 		},
 		{
 			name: "Test case 4: September 10th",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: 253,
 		},
 	}
@@ -863,17 +928,23 @@ func TestDateTime_Weekend(t *testing.T) {
 	}{
 		{
 			name: "Test case 1: Saturday",
-			dt:   &DateTime{tm: time.Date(2024, 9, 14, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 14, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: true,
 		},
 		{
 			name: "Test case 2: Sunday",
-			dt:   &DateTime{tm: time.Date(2024, 9, 15, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 15, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: true,
 		},
 		{
 			name: "Test case 3: Monday",
-			dt:   &DateTime{tm: time.Date(2024, 9, 16, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 16, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: false,
 		},
 	}
@@ -894,12 +965,16 @@ func TestDateTime_IsLeapYear(t *testing.T) {
 	}{
 		{
 			name: "Test case 1: Leap year",
-			dt:   &DateTime{tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: true,
 		},
 		{
 			name: "Test case 2: Not leap year",
-			dt:   &DateTime{tm: time.Date(2023, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			dt: &DateTime{
+				tm: time.Date(2023, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
+			},
 			want: false,
 		},
 	}

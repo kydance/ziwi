@@ -187,7 +187,11 @@ func TestFileReader_SeekOffset(t *testing.T) {
 		}
 
 		if fr.Offset() != test.expectOffset {
-			t.Errorf("Offset mismatch after SeekOffset, Expected: %d, Got: %d", test.offset, fr.Offset())
+			t.Errorf(
+				"Offset mismatch after SeekOffset, Expected: %d, Got: %d",
+				test.offset,
+				fr.Offset(),
+			)
 		}
 	}
 }
@@ -846,7 +850,12 @@ func TestFileMode(t *testing.T) {
 	}{
 		{"Existing file", filepath.Join(tempDir, "normal.txt"), 0644, false},
 		{"Existing directory", filepath.Join(tempDir, "dir"), 0755, false},
-		{"Existing symlink", filepath.Join(tempDir, "link_to_normal.txt"), os.ModeSymlink | 0755, false},
+		{
+			"Existing symlink",
+			filepath.Join(tempDir, "link_to_normal.txt"),
+			os.ModeSymlink | 0755,
+			false,
+		},
 		{"Non-existing file", filepath.Join(tempDir, "non_existing.txt"), 0, true},
 	}
 
@@ -1481,7 +1490,11 @@ func TestWriteStringToFile(t *testing.T) {
 		return
 	}
 	if content != readContent {
-		t.Errorf("WriteStringToFile() wrote incorrect data to the file. Expected: %s, Got: %s", content, readContent)
+		t.Errorf(
+			"WriteStringToFile() wrote incorrect data to the file. Expected: %s, Got: %s",
+			content,
+			readContent,
+		)
 	}
 
 	// Test case 2: Append to an existing file
