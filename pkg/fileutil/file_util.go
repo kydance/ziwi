@@ -150,7 +150,7 @@ func RemoveFile(file string) error {
 
 // ClearFile clears a file, that is, it will write an empty string to the file.
 func ClearFile(file string) error {
-	f, err := os.OpenFile(file, os.O_WRONLY|os.O_TRUNC, 0777)
+	f, err := os.OpenFile(file, os.O_WRONLY|os.O_TRUNC, 0o777)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func CopyDir(dst, src string) error {
 		return fmt.Errorf("source is not a directory: %s", src)
 	}
 
-	err = os.MkdirAll(dst, 0775)
+	err = os.MkdirAll(dst, 0o775)
 	if err != nil {
 		return fmt.Errorf("failed to create destination directory: %w", err)
 	}
@@ -587,7 +587,7 @@ func WriteCSV(file string, records [][]string, append bool, delimiter ...rune) e
 		flag |= os.O_APPEND
 	}
 
-	f, err := os.OpenFile(file, flag, 0644)
+	f, err := os.OpenFile(file, flag, 0o644)
 	if err != nil {
 		return err
 	}
@@ -665,7 +665,7 @@ func WriteStringToFile(file, content string, append bool) error {
 		flag |= os.O_TRUNC
 	}
 
-	f, err := os.OpenFile(file, flag, 0644)
+	f, err := os.OpenFile(file, flag, 0o644)
 	if err != nil {
 		return err
 	}
@@ -677,7 +677,7 @@ func WriteStringToFile(file, content string, append bool) error {
 
 // WriteBytesToFile writes bytes to specified file with O_TRUNC flag.
 func WriteBytesToFile(file string, content []byte) error {
-	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return err
 	}

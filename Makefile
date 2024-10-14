@@ -5,6 +5,7 @@ GOCLEAN := $(GOCMD) clean
 GOTEST := $(GOCMD) test
 GOGET := $(GOCMD) get
 GOMOD := $(GOCMD) mod
+GOFUMPT := gofumpt
 GOLINT := golangci-lint
 
 # Project parameters
@@ -14,23 +15,31 @@ TARGETS := $(notdir $(wildcard $(CMD_DIR)/*))
 PKG_LIST := $(shell $(GOCMD) list ./... | grep -v /vendor/)
 
 # Build flags
-LDFLAGS := -ldflags "-w -s"
-# CGO_FLAGS := CGO_ENABLED=1 CGO_CXXFLAGS='-D_GLIBCXX_USE_CXX11_ABI=0'
-CGO_FLAGS := CGO_ENABLED=1
+VERSION := $(shell git describe --tags --always --dirty)
+BUILD_TIME := $(shell date -u '+%Y-%m-%d %H:%M:%S')
+LDFLAGS := -w -s -X 'master.Version=$(VERSION)' -X 'master.BuildTime=$(BUILD_TIME)'
+CGO_FLAGS := CGO_ENABLED=1 # CGO_CXXFLAGS='-D_GLIBCXX_USE_CXX11_ABI=0'
+
+# Colors for pretty printing
+BLUE := \033[0;34m
+NC := \033[0m # No Color
 
 # Targets
 .PHONY: all clean test lint tidy help $(TARGETS)
 
 # Default target
 all: build
-build: tidy lint test $(TARGETS)
+build: clean tidy fumpt lint $(TARGETS)
+
+# For GDP without golangci-lint
+compile: tidy $(TARGETS)
 
 # Build each target
 define build_target
 $(BIN_DIR)/$(1): $$(shell find $(CMD_DIR)/$(1) -name '*.go')
-	@echo "Building $$@..."
+	@printf "$(BLUE)Building $$@...$(NC)\n"
 	@mkdir -p $(BIN_DIR)
-	$$(CGO_FLAGS) $$(GOBUILD) $$(LDFLAGS) -o $$@ ./$(CMD_DIR)/$(1)
+	@$(CGO_FLAGS) $(GOBUILD) -ldflags "$(LDFLAGS)" -o $$@ ./$(CMD_DIR)/$(1)
 endef
 
 # Generate build rules for each target
@@ -38,33 +47,42 @@ $(foreach target,$(TARGETS),$(eval $(call build_target,$(target))))
 
 # Shortcut targets
 $(TARGETS):
-	$(info Building with CGO_FLAGS=$(CGO_FLAGS))
+	@echo "Building with CGO_FLAGS=$(CGO_FLAGS)"
 	@$(MAKE) $(BIN_DIR)/$@
 
 test:
-	@echo "Running tests ..."
-	# @$(GOTEST) -v $(PKG_LIST)
-	@$(GOTEST) $(PKG_LIST)
+	@printf "$(BLUE)Running tests ...$(NC)\n"
+	@$(GOTEST) -v $(PKG_LIST)
+
+fumpt:
+	@printf "$(BLUE)Running fumpt ...$(NC)\n"
+	@$(GOFUMPT) -w -l $(shell find . -name '*.go')
 
 lint:
-	@echo "Running linter ..."
+	@printf "$(BLUE)Running linter ...$(NC)\n"
 	@$(GOLINT) run ./...
 
 tidy:
-	@echo "Tidying and verifying module dependencies ..."
+	@printf "$(BLUE)Tidying and verifying module dependencies ...$(NC)\n"
 	@$(GOMOD) tidy
 	@$(GOMOD) verify
 
 clean:
-	@echo "Cleaning up ..."
+	@printf "$(BLUE)Cleaning up ...$(NC)\n"
 	@$(GOCLEAN)
-	-rm -rf $(BIN_DIR)
+	@rm -rf $(BIN_DIR) *.pid *.perf
 
 help:
 	@echo "Available targets:"
-	@echo "  all(build)  : Build the program (default)"
+	@echo "  all (build) : Build the program (default)"
 	@echo "  test        : Run tests"
+	@echo "  fumpt       : Run gofumpt"
 	@echo "  lint        : Run golangci-lint"
 	@echo "  tidy        : Tidy and verify go modules"
 	@echo "  clean       : Remove object files and binaries"
 	@echo "  help        : Display this help message"
+	@echo "  <target>    : Build specific target ($(TARGETS))"
+
+# Debugging
+print-%:
+	@echo '$*=$($*)'

@@ -251,7 +251,7 @@ func TestIsExist(t *testing.T) {
 
 	unreadableFilePath := tempDir + "/unreadable"
 	// Make the directory unreadable
-	err = os.Chmod(tempDir, 0000)
+	err = os.Chmod(tempDir, 0o000)
 	if err != nil {
 		t.Fatalf("Failed to chmod temp dir: %v", err)
 	}
@@ -319,7 +319,7 @@ func TestCopyFile(t *testing.T) {
 
 	// Create a source file with test data
 	testData := []byte("Hello, World!")
-	if err := os.WriteFile(src, testData, 0644); err != nil {
+	if err := os.WriteFile(src, testData, 0o644); err != nil {
 		t.Fatalf("Failed to create source file: %v", err)
 	}
 	defer os.Remove(src)
@@ -354,15 +354,15 @@ func TestCopyDir(t *testing.T) {
 	dst := "dst"
 
 	// Create source directory and files
-	err := os.MkdirAll(src+"/subdir", 0775)
+	err := os.MkdirAll(src+"/subdir", 0o775)
 	if err != nil {
 		t.Fatalf("Failed to create source directory: %v", err)
 	}
-	err = os.WriteFile(src+"/file1.txt", []byte("Hello, World!"), 0644)
+	err = os.WriteFile(src+"/file1.txt", []byte("Hello, World!"), 0o644)
 	if err != nil {
 		t.Fatalf("Failed to create source file: %v", err)
 	}
-	err = os.WriteFile(src+"/subdir/file2.txt", []byte("Another test"), 0644)
+	err = os.WriteFile(src+"/subdir/file2.txt", []byte("Another test"), 0o644)
 	if err != nil {
 		t.Fatalf("Failed to create source file: %v", err)
 	}
@@ -409,7 +409,7 @@ func TestCopyDirFailure(t *testing.T) {
 	dst := "/root"
 
 	// Create source directory
-	err := os.MkdirAll(src, 0775)
+	err := os.MkdirAll(src, 0o775)
 	if err != nil {
 		t.Fatalf("Failed to create source directory: %v", err)
 	}
@@ -626,12 +626,12 @@ func TestFilesCurDir(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	testFile := filepath.Join(tempDir, "testfile.txt")
-	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+	if err := os.WriteFile(testFile, []byte("test"), 0o644); err != nil {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
 	subdir := filepath.Join(tempDir, "subdir")
-	if err := os.Mkdir(subdir, 0755); err != nil {
+	if err := os.Mkdir(subdir, 0o755); err != nil {
 		t.Fatalf("Failed to create subdir: %v", err)
 	}
 
@@ -820,14 +820,14 @@ func TestFileMode(t *testing.T) {
 
 	// Create files with different permissions
 	files := map[string]os.FileMode{
-		"normal.txt": 0644,
-		"dir":        0755,
-		"link":       0644,
+		"normal.txt": 0o644,
+		"dir":        0o755,
+		"link":       0o644,
 	}
 
 	for name, mode := range files {
 		path := filepath.Join(tempDir, name)
-		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			t.Fatalf("Failed to create directory for %s: %v", name, err)
 		}
 		if err := os.WriteFile(path, []byte{}, mode); err != nil {
@@ -848,12 +848,12 @@ func TestFileMode(t *testing.T) {
 		expected os.FileMode
 		hasError bool
 	}{
-		{"Existing file", filepath.Join(tempDir, "normal.txt"), 0644, false},
-		{"Existing directory", filepath.Join(tempDir, "dir"), 0755, false},
+		{"Existing file", filepath.Join(tempDir, "normal.txt"), 0o644, false},
+		{"Existing directory", filepath.Join(tempDir, "dir"), 0o755, false},
 		{
 			"Existing symlink",
 			filepath.Join(tempDir, "link_to_normal.txt"),
-			os.ModeSymlink | 0755,
+			os.ModeSymlink | 0o755,
 			false,
 		},
 		{"Non-existing file", filepath.Join(tempDir, "non_existing.txt"), 0, true},
@@ -980,7 +980,7 @@ func TestDirSize(t *testing.T) {
 	if err := createTestFile("file2.txt", 25); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Mkdir(filepath.Join(tempDir, "subdir"), 0755); err != nil {
+	if err := os.Mkdir(filepath.Join(tempDir, "subdir"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := createTestFile("subdir/file3.txt", 15); err != nil {
@@ -1027,7 +1027,7 @@ func TestDirSize_PermissionError(t *testing.T) {
 
 	// Create a subdirectory with no read permissions
 	subdir := filepath.Join(tempDir, "inaccessible")
-	if err := os.Mkdir(subdir, 0000); err != nil {
+	if err := os.Mkdir(subdir, 0o000); err != nil {
 		t.Fatal(err)
 	}
 
