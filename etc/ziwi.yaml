@@ -1,0 +1,6 @@
+log:
+  disable-caller: false
+  disable-stacktrace: false
+  level: debug
+  format: console
+  output-paths: [/tmp/ziwi.log, stdout]

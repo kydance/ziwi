@@ -585,3 +585,13 @@ func Ellipsis(str string, size int) string {
 	}
 	return string(vr[:size]) + "..."
 }
+
+// In returns true if the dst is in the src.
+func In(dst string, src []string) bool {
+	m := make(map[string]bool)
+	for _, v := range src {
+		m[v] = true
+	}
+	_, ok := m[dst]
+	return ok
+}
