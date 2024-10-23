@@ -7,147 +7,156 @@ import (
 	"sync/atomic"
 )
 
-type Result struct {
-	Data any
-	Err  error
+// TaskResult holds the result of a task along with any associated error
+type TaskResult struct {
+	Result any
+	Error  error
 }
 
-type ProcessorStats struct {
-	completedTasks uint64
-	errCnt         uint64
-	activeWorkers  int32
+// ProcessorMetrics keeps track of key metrics for the task processor
+type ProcessorMetrics struct {
+	completedTasks uint64 // number of successfully completed tasks
+	errorCount     uint64 // number of errors encountered
+	activeWorkers  int32  // current active worker count
 }
 
-type Processor struct {
-	maxWorkers int
-	workerPool chan struct{}
+// TaskProcessor is responsible for managing task execution with a pool of workers
+type TaskProcessor struct {
+	maxWorkers int           // maximum number of concurrent workers
+	workerPool chan struct{} // worker pool semaphore to limit concurrency
 
-	errHandler func(error)
-	retHandler func(any)
+	errorHandler  func(error) // function to handle task errors
+	resultHandler func(any)   // function to handle task results
 
-	stats ProcessorStats
+	metrics ProcessorMetrics // processor's performance metrics
 }
 
-type ProcessorOption func(*Processor)
+// ProcessorOption defines the functional option type for TaskProcessor configuration
+type ProcessorOption func(*TaskProcessor)
 
-func NewTaskProcessor(options ...ProcessorOption) *Processor {
-	// 默认使用 CPU 核数作为工作协程数量
-	p := &Processor{
+// NewTaskProcessor creates a new TaskProcessor with the provided options
+func NewTaskProcessor(options ...ProcessorOption) *TaskProcessor {
+	// Default worker count is the number of logical CPUs
+	processor := &TaskProcessor{
 		maxWorkers: runtime.GOMAXPROCS(0),
 	}
 
-	// 应用配置选项
+	// Apply configuration options
 	for _, option := range options {
-		option(p)
+		option(processor)
 	}
 
-	// Init worker pool
-	p.workerPool = make(chan struct{}, p.maxWorkers)
-	for i := 0; i < p.maxWorkers; i++ {
-		p.workerPool <- struct{}{}
+	// Initialize worker pool
+	processor.workerPool = make(chan struct{}, processor.maxWorkers)
+	for i := 0; i < processor.maxWorkers; i++ {
+		processor.workerPool <- struct{}{} // pre-fill the worker pool
 	}
 
-	return p
+	return processor
 }
 
-// WithMaxWorkers 设置最大工作协程数量
-func WithMaxWorkers(n int) ProcessorOption {
-	return func(p *Processor) {
+// WithMaxWorkerCount configures the maximum number of workers for the TaskProcessor
+func WithMaxWorkerCount(n int) ProcessorOption {
+	return func(p *TaskProcessor) {
 		p.maxWorkers = n
 	}
 }
 
-// WithErrorHandler 设置错误处理函数
+// WithErrorHandler configures the error handler for tasks that encounter errors
 func WithErrorHandler(handler func(error)) ProcessorOption {
-	return func(p *Processor) {
-		p.errHandler = handler
+	return func(p *TaskProcessor) {
+		p.errorHandler = handler
 	}
 }
 
-// WithRetHandler 设置结果处理函数
-func WithRetHandler(handler func(any)) ProcessorOption {
-	return func(p *Processor) {
-		p.retHandler = handler
+// WithResultHandler configures the result handler for tasks that return results
+func WithResultHandler(handler func(any)) ProcessorOption {
+	return func(p *TaskProcessor) {
+		p.resultHandler = handler
 	}
 }
 
-func (p *Processor) ProcessChunks(ctx context.Context, data []any,
-	processFunc func([]any) (any, error),
+// ProcessInChunks processes tasks in chunks, distributing them among workers
+func (p *TaskProcessor) ProcessInChunks(ctx context.Context, tasks []any,
+	taskFunc func([]any) (any, error),
 ) error {
-	if len(data) == 0 {
-		return nil
+	if len(tasks) == 0 {
+		return nil // no tasks to process
 	}
 
-	// 计算每个工作协程的数据量
-	chunkSize := (len(data) + p.maxWorkers - 1) / p.maxWorkers // 向上取整
-	chunks := make([][]any, 0, p.maxWorkers)
+	// Determine chunk size based on the number of workers
+	chunkSize := (len(tasks) + p.maxWorkers - 1) / p.maxWorkers // ceiling division
+	taskChunks := make([][]any, 0, p.maxWorkers)
 
-	// allocate chunks
-	for i := 0; i < len(data); i += chunkSize {
+	// Split tasks into chunks
+	for i := 0; i < len(tasks); i += chunkSize {
 		end := i + chunkSize
-		if end > len(data) {
-			end = len(data)
+		if end > len(tasks) {
+			end = len(tasks)
 		}
-		chunks = append(chunks, data[i:end])
+		taskChunks = append(taskChunks, tasks[i:end])
 	}
 
-	// 创建错误通道
-	errChan := make(chan error, len(chunks))
-	resultChan := make(chan Result, len(chunks))
+	// Error and result channels for handling task outcomes
+	errorChan := make(chan error, len(taskChunks))
+	resultChan := make(chan TaskResult, len(taskChunks))
 
 	var wg sync.WaitGroup
-	wg.Add(len(chunks))
+	wg.Add(len(taskChunks)) // each chunk is processed by one worker
 
-	// Handle each chunk
-	for i := range chunks {
+	// Process each task chunk with a worker
+	for i := range taskChunks {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return ctx.Err() // context canceled, exit early
 
 		case <-p.workerPool:
+			// Launch a goroutine to handle this chunk
 			go func(chunk []any) {
 				defer func() {
-					p.workerPool <- struct{}{} // 释放工作协程槽位
-					wg.Done()
+					p.workerPool <- struct{}{} // release worker slot back to the pool
+					wg.Done()                  // mark this worker as done
 				}()
 
-				// Update active workers
-				atomic.AddInt32(&p.stats.activeWorkers, 1)
-				defer atomic.AddInt32(&p.stats.activeWorkers, -1)
+				// Track active workers
+				atomic.AddInt32(&p.metrics.activeWorkers, 1)
+				defer atomic.AddInt32(&p.metrics.activeWorkers, -1)
 
-				result, err := processFunc(chunk)
+				// Execute the task function for this chunk
+				result, err := taskFunc(chunk)
 				if err != nil {
-					atomic.AddUint64(&p.stats.errCnt, 1)
-					if p.errHandler != nil {
-						p.errHandler(err)
+					// Track error count and invoke error handler
+					atomic.AddUint64(&p.metrics.errorCount, 1)
+					if p.errorHandler != nil {
+						p.errorHandler(err)
 					}
-
-					errChan <- err
+					errorChan <- err
 					return
 				}
 
-				atomic.AddUint64(&p.stats.completedTasks, 1)
-				if p.retHandler != nil {
-					p.retHandler(result)
+				// Track completed tasks and invoke result handler
+				atomic.AddUint64(&p.metrics.completedTasks, 1)
+				if p.resultHandler != nil {
+					p.resultHandler(result)
 				}
-				resultChan <- Result{
-					Data: result,
-					Err:  nil,
+				resultChan <- TaskResult{
+					Result: result,
+					Error:  nil,
 				}
-			}(chunks[i])
+			}(taskChunks[i])
 		}
 	}
 
-	// 等待所有工作协程完成
+	// Wait for all workers to complete
 	done := make(chan struct{})
 	go func() {
-		wg.Wait()
-		close(done)
-		close(errChan)
-		close(resultChan)
+		wg.Wait()         // wait for all goroutines to finish
+		close(done)       // signal completion
+		close(errorChan)  // close error channel
+		close(resultChan) // close result channel
 	}()
 
-	// 等待完成或上下文被取消
+	// Wait for either all tasks to complete or context cancellation
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -157,11 +166,11 @@ func (p *Processor) ProcessChunks(ctx context.Context, data []any,
 	}
 }
 
-// Stats returns 统计信息
-func (p *Processor) Stats() ProcessorStats {
-	return ProcessorStats{
-		activeWorkers:  atomic.LoadInt32(&p.stats.activeWorkers),
-		completedTasks: atomic.LoadUint64(&p.stats.completedTasks),
-		errCnt:         atomic.LoadUint64(&p.stats.errCnt),
+// Metrics returns the current processor's performance metrics
+func (p *TaskProcessor) Metrics() ProcessorMetrics {
+	return ProcessorMetrics{
+		activeWorkers:  atomic.LoadInt32(&p.metrics.activeWorkers),
+		completedTasks: atomic.LoadUint64(&p.metrics.completedTasks),
+		errorCount:     atomic.LoadUint64(&p.metrics.errorCount),
 	}
 }

@@ -17,13 +17,13 @@ func TestTaskProcessor(t *testing.T) {
 	}
 
 	processor := NewTaskProcessor(
-		WithMaxWorkers(5),
+		WithMaxWorkerCount(5),
 
 		WithErrorHandler(func(err error) {
 			log.Errorf("Error occurred: %v", err)
 		}),
 
-		WithRetHandler(func(data any) {
+		WithResultHandler(func(data any) {
 			log.Infof("%v", data)
 		}),
 	)
@@ -31,7 +31,7 @@ func TestTaskProcessor(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	err := processor.ProcessChunks(ctx, vData,
+	err := processor.ProcessInChunks(ctx, vData,
 		func(data []any) (any, error) {
 			result := make([]any, 0, len(data))
 
@@ -49,8 +49,12 @@ func TestTaskProcessor(t *testing.T) {
 		log.Fatalf("Process failed: %v", err)
 	}
 
-	stats := processor.Stats()
-	log.Infof("Porcessing completed. Completed tasks: %d, Errors: %d", stats.completedTasks, stats.errCnt)
+	stats := processor.Metrics()
+	log.Infof(
+		"Porcessing completed. Completed tasks: %d, Errors: %d",
+		stats.completedTasks,
+		stats.errorCount,
+	)
 }
 
 func TestTaskProcess_DataCut(t *testing.T) {
@@ -61,13 +65,13 @@ func TestTaskProcess_DataCut(t *testing.T) {
 	}
 
 	processor := NewTaskProcessor(
-		WithMaxWorkers(runtime.GOMAXPROCS(0)),
+		WithMaxWorkerCount(runtime.GOMAXPROCS(0)),
 
 		WithErrorHandler(func(err error) {
 			log.Errorf("Error occurred: %v", err)
 		}),
 
-		WithRetHandler(func(data any) {
+		WithResultHandler(func(data any) {
 			log.Infof("%v", data)
 		}),
 	)
@@ -75,7 +79,7 @@ func TestTaskProcess_DataCut(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	err := processor.ProcessChunks(ctx, vData,
+	err := processor.ProcessInChunks(ctx, vData,
 		func(data []any) (any, error) {
 			return len(data), nil
 		})
@@ -83,6 +87,10 @@ func TestTaskProcess_DataCut(t *testing.T) {
 		log.Fatalf("Process failed: %v", err)
 	}
 
-	stats := processor.Stats()
-	log.Infof("Porcessing completed. Completed tasks: %d, Errors: %d", stats.completedTasks, stats.errCnt)
+	stats := processor.Metrics()
+	log.Infof(
+		"Porcessing completed. Completed tasks: %d, Errors: %d",
+		stats.completedTasks,
+		stats.errorCount,
+	)
 }
