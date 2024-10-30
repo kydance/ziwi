@@ -14,6 +14,7 @@ var TimeFormat = map[string]string{
 	"yyyy-mm":             "2006-01",
 	"mm-dd":               "01-02",
 	"dd-mm-yy hh:mm:ss":   "02-01-06 15:04:05",
+
 	"yyyy/mm/dd hh:mm:ss": "2006/01/02 15:04:05",
 	"yyyy/mm/dd hh:mm":    "2006/01/02 15:04",
 	"yyyy/mm/dd hh":       "2006/01/02 15",
@@ -21,14 +22,15 @@ var TimeFormat = map[string]string{
 	"yyyy/mm":             "2006/01",
 	"mm/dd":               "01/02",
 	"dd/mm/yy hh:mm:ss":   "02/01/06 15:04:05",
-	"yyyymmdd":            "20060102",
-	"mmddyy":              "010206",
-	"yyyy":                "2006",
-	"yy":                  "06",
-	"mm":                  "01",
-	"hh:mm:ss":            "15:04:05",
-	"hh:mm":               "15:04",
-	"mm:ss":               "04:05",
+
+	"yyyymmdd": "20060102",
+	"mmddyy":   "010206",
+	"yyyy":     "2006",
+	"yy":       "06",
+	"mm":       "01",
+	"hh:mm:ss": "15:04:05",
+	"hh:mm":    "15:04",
+	"mm:ss":    "04:05",
 }
 
 // DateTime holds time.Time
@@ -36,7 +38,7 @@ type DateTime struct {
 	tm time.Time
 }
 
-// NewDateTime
+// NewDateTime returns a new DateTime with current time
 func NewDateTime() *DateTime {
 	return &DateTime{tm: time.Now()}
 }
@@ -115,12 +117,12 @@ func (d *DateTime) AddHour(hour int64) {
 
 // AddDay adds or subs day
 func (d *DateTime) AddDay(day int64) {
-	d.tm = d.tm.Add(24 * time.Hour * time.Duration(day))
+	d.tm = d.tm.AddDate(0, 0, int(day))
 }
 
 // AddYear adds or subs year(365 days)
 func (d *DateTime) AddYear(year int64) {
-	d.tm = d.tm.Add(365 * 24 * time.Hour * time.Duration(year))
+	d.tm = d.tm.AddDate(int(year), 0, 0)
 }
 
 // Date returns the year, month, and day.
