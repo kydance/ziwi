@@ -1,4 +1,4 @@
-package datetime
+package time
 
 import (
 	"reflect"
@@ -7,26 +7,24 @@ import (
 )
 
 func TestNewDateTime(t *testing.T) {
-	dt := NewDateTime()
+	tm := NewTime()
 	now := time.Now()
 
-	if dt.tm.Year() != now.Year() || dt.tm.Month() != now.Month() || dt.tm.Day() != now.Day() {
+	if tm.Year() != now.Year() || tm.Month() != now.Month() || tm.Day() != now.Day() {
 		t.Errorf("NewDateTime() failed, expected date to match current date")
 	}
 }
 
-func TestNewDateTimeFromTime(t *testing.T) {
+func TestSetTime(t *testing.T) {
 	testTime := time.Date(2024, 11, 20, 12, 34, 56, 0, time.UTC)
-	dt := NewDateTimeFromTime(testTime)
+	tm := SetTime(testTime)
 
-	if dt.tm.Year() != testTime.Year() || dt.tm.Month() != testTime.Month() ||
-		dt.tm.Day() != testTime.Day() {
-		t.Errorf("NewDateTimeFromTime() failed, expected date to match provided date")
+	if tm.Year() != testTime.Year() || tm.Month() != testTime.Month() || tm.Day() != testTime.Day() {
+		t.Errorf("SetTime() failed, expected date to match provided date")
 	}
 
-	if dt.tm.Hour() != testTime.Hour() || dt.tm.Minute() != testTime.Minute() ||
-		dt.tm.Second() != testTime.Second() {
-		t.Errorf("NewDateTimeFromTime() failed, expected time to match provided time")
+	if tm.Hour() != testTime.Hour() || tm.Minute() != testTime.Minute() || tm.Second() != testTime.Second() {
+		t.Errorf("SetTime() failed, expected time to match provided time")
 	}
 }
 
@@ -39,7 +37,7 @@ func TestNewDateTimeFormStr(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *DateTime
+		want    *Time
 		wantErr bool
 	}{
 		{
@@ -48,7 +46,7 @@ func TestNewDateTimeFormStr(t *testing.T) {
 				str:    "2024-09-10 23:24:25",
 				format: "yyyy-mm-dd hh:mm:ss",
 			},
-			want: &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)},
+			want: &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)},
 		},
 		{
 			name: "yyyy-mm-dd hh:mm:ss with timezone",
@@ -57,7 +55,7 @@ func TestNewDateTimeFormStr(t *testing.T) {
 				format:   "yyyy-mm-dd hh:mm:ss",
 				timezone: []string{"UTC"},
 			},
-			want: &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)},
+			want: &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)},
 		},
 		{
 			name: "yyyy-mm-dd hh:mm",
@@ -65,7 +63,7 @@ func TestNewDateTimeFormStr(t *testing.T) {
 				str:    "2024-09-10 23:24",
 				format: "yyyy-mm-dd hh:mm",
 			},
-			want: &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 0, 0, time.UTC)},
+			want: &Time{time.Date(2024, 9, 10, 23, 24, 0, 0, time.UTC)},
 		},
 		{
 			name: "yyyy-mm-dd",
@@ -73,7 +71,7 @@ func TestNewDateTimeFormStr(t *testing.T) {
 				str:    "2024-09-10",
 				format: "yyyy-mm-dd",
 			},
-			want: &DateTime{tm: time.Date(2024, 9, 10, 0, 0, 0, 0, time.UTC)},
+			want: &Time{time.Date(2024, 9, 10, 0, 0, 0, 0, time.UTC)},
 		},
 		{
 			name: "dd-mm-yy hh:mm:ss",
@@ -81,7 +79,7 @@ func TestNewDateTimeFormStr(t *testing.T) {
 				str:    "10-09-24 23:24:25",
 				format: "dd-mm-yy hh:mm:ss",
 			},
-			want: &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)},
+			want: &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)},
 		},
 		{
 			name: "invalid format",
@@ -103,13 +101,13 @@ func TestNewDateTimeFormStr(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewDateTimeFormStr(tt.args.str, tt.args.format, tt.args.timezone...)
+			got, err := NewTimeFormStr(tt.args.str, tt.args.format, tt.args.timezone...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewDateTimeFormStr() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if tt.want != nil && got != nil {
-				if !got.tm.Equal(tt.want.tm) {
+				if !got.Equal(tt.want.Time) {
 					t.Errorf("NewDateTimeFormStr() got = %v, want %v", got, tt.want)
 				}
 			}
@@ -118,7 +116,7 @@ func TestNewDateTimeFormStr(t *testing.T) {
 }
 
 func TestDateTime_FormatTimeToStr(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
 
 	type args struct {
 		format   string
@@ -126,7 +124,7 @@ func TestDateTime_FormatTimeToStr(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		args args
 		want string
 	}{
@@ -199,27 +197,22 @@ func TestDateTime_FormatTimeToStr(t *testing.T) {
 }
 
 func TestDateTime_AddMinute(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
 	dt.AddMinute(1)
 
 	year, month, day := dt.Date()
 	if year != 2024 || month != 9 || day != 10 {
-		t.Errorf(
-			"DateTime.AddMinute() date error, got = %d-%d-%d, want = 2024-09-10",
-			year,
-			month,
-			day,
-		)
+		t.Errorf("DateTime.AddMinute() date error, got = %d-%d-%d, want = 2024-09-10", year, month, day)
 	}
 
-	hour, min, sec := dt.tm.Hour(), dt.tm.Minute(), dt.tm.Second()
+	hour, min, sec := dt.Hour(), dt.Minute(), dt.Second()
 	if hour != 23 || min != 25 || sec != 25 {
 		t.Errorf("DateTime.AddMinute() time error, got = %d:%d:%d, want = 23:25:25", hour, min, sec)
 	}
 }
 
 func TestDateTime_AddHour(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
 	dt.AddHour(1)
 
 	year, month, day := dt.Date()
@@ -232,14 +225,14 @@ func TestDateTime_AddHour(t *testing.T) {
 		)
 	}
 
-	hour, min, sec := dt.tm.Hour(), dt.tm.Minute(), dt.tm.Second()
+	hour, min, sec := dt.Hour(), dt.Minute(), dt.Second()
 	if hour != 0 || min != 24 || sec != 25 {
 		t.Errorf("DateTime.AddHour() time error, got = %d:%d:%d, want = 00:24:25", hour, min, sec)
 	}
 }
 
 func TestDateTime_AddDay(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
 	dt.AddDay(1)
 
 	year, month, day := dt.Date()
@@ -252,14 +245,14 @@ func TestDateTime_AddDay(t *testing.T) {
 		)
 	}
 
-	hour, min, sec := dt.tm.Hour(), dt.tm.Minute(), dt.tm.Second()
+	hour, min, sec := dt.Hour(), dt.Minute(), dt.Second()
 	if hour != 23 || min != 24 || sec != 25 {
 		t.Errorf("DateTime.AddDay() time error, got = %d:%d:%d, want = 23:24:25", hour, min, sec)
 	}
 }
 
 func TestDateTime_AddYear(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
 	dt.AddYear(1)
 
 	year, month, day := dt.Date()
@@ -272,14 +265,14 @@ func TestDateTime_AddYear(t *testing.T) {
 		)
 	}
 
-	hour, min, sec := dt.tm.Hour(), dt.tm.Minute(), dt.tm.Second()
+	hour, min, sec := dt.Hour(), dt.Minute(), dt.Second()
 	if hour != 23 || min != 24 || sec != 25 {
 		t.Errorf("DateTime.AddYear() time error, got = %d:%d:%d, want = 23:24:25", hour, min, sec)
 	}
 }
 
 func TestDateTime_Date(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
 	year, month, day := dt.Date()
 	if year != 2024 || month != 9 || day != 10 {
 		t.Errorf("DateTime.Date() error, got = %d-%d-%d, want = 2024-09-10", year, month, day)
@@ -287,7 +280,7 @@ func TestDateTime_Date(t *testing.T) {
 }
 
 func TestDateTime_DateStr(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
 	want := "2024-09-10"
 	if got := dt.DateStr(); got != want {
 		t.Errorf("DateTime.DateStr() = %v, want %v", got, want)
@@ -295,7 +288,7 @@ func TestDateTime_DateStr(t *testing.T) {
 }
 
 func TestDateTime_TimeStr(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
 	want := "23:24:25"
 	if got := dt.TimeStr(); got != want {
 		t.Errorf("DateTime.TimeStr() = %v, want %v", got, want)
@@ -303,7 +296,7 @@ func TestDateTime_TimeStr(t *testing.T) {
 }
 
 func TestDateTime_DateTimeStr(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
 	want := "2024-09-10 23:24:25"
 	if got := dt.DateTimeStr(); got != want {
 		t.Errorf("DateTime.DateTimeStr() = %v, want %v", got, want)
@@ -311,7 +304,7 @@ func TestDateTime_DateTimeStr(t *testing.T) {
 }
 
 func TestDateTime_TodayStartTimeStr(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
 	want := "2024-09-10 00:00:00"
 	if got := dt.TodayStartTimeStr(); got != want {
 		t.Errorf("DateTime.TodayStartTimeStr() = %v, want %v", got, want)
@@ -319,7 +312,7 @@ func TestDateTime_TodayStartTimeStr(t *testing.T) {
 }
 
 func TestDateTime_TodayEndTimeStr(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
 	want := "2024-09-10 23:59:59"
 	if got := dt.TodayEndTimeStr(); got != want {
 		t.Errorf("DateTime.TodayEndTimeStr() = %v, want %v", got, want)
@@ -327,14 +320,14 @@ func TestDateTime_TodayEndTimeStr(t *testing.T) {
 }
 
 func TestDateTime_Timestamp(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 0, time.UTC)}
 
 	type args struct {
 		timezone []string
 	}
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		args args
 		want int64
 	}{
@@ -381,14 +374,14 @@ func TestDateTime_Timestamp(t *testing.T) {
 }
 
 func TestDateTime_TimestampMilli(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 123456789, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 123456789, time.UTC)}
 
 	type args struct {
 		timezone []string
 	}
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		args args
 		want int64
 	}{
@@ -427,14 +420,14 @@ func TestDateTime_TimestampMilli(t *testing.T) {
 }
 
 func TestDateTime_TimestampMicro(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 123456789, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 123456789, time.UTC)}
 
 	type args struct {
 		timezone []string
 	}
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		args args
 		want int64
 	}{
@@ -473,14 +466,14 @@ func TestDateTime_TimestampMicro(t *testing.T) {
 }
 
 func TestDateTime_TimestampNano(t *testing.T) {
-	dt := &DateTime{tm: time.Date(2024, 9, 10, 23, 24, 25, 123456789, time.UTC)}
+	dt := &Time{time.Date(2024, 9, 10, 23, 24, 25, 123456789, time.UTC)}
 
 	type args struct {
 		timezone []string
 	}
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		args args
 		want int64
 	}{
@@ -521,21 +514,17 @@ func TestDateTime_TimestampNano(t *testing.T) {
 func TestDateTime_ZeroHourTimestamp(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want int64
 	}{
 		{
 			name: "Test case 1",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 0, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 0, time.FixedZone("CST", 8*3600))},
 			want: 1725897600,
 		},
 		{
 			name: "Test case 2",
-			dt: &DateTime{
-				tm: time.Date(2024, 12, 31, 23, 59, 59, 0, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 12, 31, 23, 59, 59, 0, time.FixedZone("CST", 8*3600))},
 			want: 1735574400,
 		},
 	}
@@ -551,21 +540,17 @@ func TestDateTime_ZeroHourTimestamp(t *testing.T) {
 func TestDateTime_NightTimestamp(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want int64
 	}{
 		{
 			name: "Test case 1",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 0, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 0, time.FixedZone("CST", 8*3600))},
 			want: 1725983999,
 		},
 		{
 			name: "Test case 2",
-			dt: &DateTime{
-				tm: time.Date(2024, 12, 31, 23, 59, 59, 0, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 12, 31, 23, 59, 59, 0, time.FixedZone("CST", 8*3600))},
 			want: 1735660799,
 		},
 	}
@@ -581,14 +566,12 @@ func TestDateTime_NightTimestamp(t *testing.T) {
 func TestDateTime_BeginOfMinute(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want time.Time
 	}{
 		{
 			name: "Test case 1",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: time.Date(2024, 9, 10, 10, 24, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -604,14 +587,12 @@ func TestDateTime_BeginOfMinute(t *testing.T) {
 func TestDateTime_EndOfMinute(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want time.Time
 	}{
 		{
 			name: "Test case 1",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: time.Date(2024, 9, 10, 10, 24, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -627,14 +608,12 @@ func TestDateTime_EndOfMinute(t *testing.T) {
 func TestDateTime_BeginOfHour(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want time.Time
 	}{
 		{
 			name: "Test case 1",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: time.Date(2024, 9, 10, 10, 0, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -650,14 +629,12 @@ func TestDateTime_BeginOfHour(t *testing.T) {
 func TestDateTime_EndOfHour(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want time.Time
 	}{
 		{
 			name: "Test case 1",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: time.Date(2024, 9, 10, 10, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -673,14 +650,12 @@ func TestDateTime_EndOfHour(t *testing.T) {
 func TestDateTime_BeginOfDay(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want time.Time
 	}{
 		{
 			name: "Test case 1",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: time.Date(2024, 9, 10, 0, 0, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -696,14 +671,12 @@ func TestDateTime_BeginOfDay(t *testing.T) {
 func TestDateTime_EndOfDay(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want time.Time
 	}{
 		{
 			name: "Test case 1",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: time.Date(2024, 9, 10, 23, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -719,22 +692,19 @@ func TestDateTime_EndOfDay(t *testing.T) {
 func TestDateTime_BeginOfWeek(t *testing.T) {
 	tests := []struct {
 		name     string
-		dt       *DateTime
+		dt       *Time
 		begFrom  []time.Weekday
 		wantTime time.Time
 	}{
 		{
-			name: "Test case 1: Default Sunday",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			name:     "Test case 1: Default Sunday",
+			dt:       &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			begFrom:  []time.Weekday{time.Sunday},
 			wantTime: time.Date(2024, 9, 8, 0, 0, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 		{
-			name: "Test case 2: Monday",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			name:     "Test case 2: Monday",
+			dt:       &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			begFrom:  []time.Weekday{time.Monday},
 			wantTime: time.Date(2024, 9, 9, 0, 0, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
@@ -754,22 +724,19 @@ func TestDateTime_BeginOfWeek(t *testing.T) {
 func TestDateTime_EndOfWeek(t *testing.T) {
 	tests := []struct {
 		name     string
-		dt       *DateTime
+		dt       *Time
 		endWith  []time.Weekday
 		wantTime time.Time
 	}{
 		{
-			name: "Test case 1: Default Saturday",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			name:     "Test case 1: Default Saturday",
+			dt:       &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
+			endWith:  []time.Weekday{time.Saturday},
 			wantTime: time.Date(2024, 9, 14, 23, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 		{
-			name: "Test case 2: Friday",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			name:     "Test case 2: Friday",
+			dt:       &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			endWith:  []time.Weekday{time.Friday},
 			wantTime: time.Date(2024, 9, 13, 23, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
@@ -786,14 +753,12 @@ func TestDateTime_EndOfWeek(t *testing.T) {
 func TestDateTime_BeginOfMonth(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want time.Time
 	}{
 		{
 			name: "Test case 1",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: time.Date(2024, 9, 1, 0, 0, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -809,21 +774,17 @@ func TestDateTime_BeginOfMonth(t *testing.T) {
 func TestDateTime_EndOfMonth(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want time.Time
 	}{
 		{
 			name: "Test case 1",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: time.Date(2024, 9, 30, 23, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 		{
 			name: "Test case 2: Leap year",
-			dt: &DateTime{
-				tm: time.Date(2024, 2, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 2, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: time.Date(2024, 2, 29, 23, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -839,14 +800,12 @@ func TestDateTime_EndOfMonth(t *testing.T) {
 func TestDateTime_BeginOfYear(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want time.Time
 	}{
 		{
 			name: "Test case 1",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: time.Date(2024, 1, 1, 0, 0, 0, 0, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -862,14 +821,12 @@ func TestDateTime_BeginOfYear(t *testing.T) {
 func TestDateTime_EndOfYear(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want time.Time
 	}{
 		{
 			name: "Test case 1",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: time.Date(2024, 12, 31, 23, 59, 59, 999999999, time.FixedZone("CST", 8*3600)),
 		},
 	}
@@ -885,29 +842,27 @@ func TestDateTime_EndOfYear(t *testing.T) {
 func TestDateTime_DayOfYear(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want int
 	}{
 		{
 			name: "Test case 1: January 1st",
-			dt:   &DateTime{tm: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)},
+			dt:   &Time{time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)},
 			want: 0,
 		},
 		{
 			name: "Test case 2: February 29th (Leap Year)",
-			dt:   &DateTime{tm: time.Date(2024, 2, 29, 0, 0, 0, 0, time.UTC)},
+			dt:   &Time{time.Date(2024, 2, 29, 0, 0, 0, 0, time.UTC)},
 			want: 59,
 		},
 		{
 			name: "Test case 3: December 31st",
-			dt:   &DateTime{tm: time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)},
+			dt:   &Time{time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)},
 			want: 365,
 		},
 		{
 			name: "Test case 4: September 10th",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: 253,
 		},
 	}
@@ -923,28 +878,22 @@ func TestDateTime_DayOfYear(t *testing.T) {
 func TestDateTime_Weekend(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want bool
 	}{
 		{
 			name: "Test case 1: Saturday",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 14, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 14, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: true,
 		},
 		{
 			name: "Test case 2: Sunday",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 15, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 15, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: true,
 		},
 		{
 			name: "Test case 3: Monday",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 16, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 16, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: false,
 		},
 	}
@@ -960,21 +909,17 @@ func TestDateTime_Weekend(t *testing.T) {
 func TestDateTime_IsLeapYear(t *testing.T) {
 	tests := []struct {
 		name string
-		dt   *DateTime
+		dt   *Time
 		want bool
 	}{
 		{
 			name: "Test case 1: Leap year",
-			dt: &DateTime{
-				tm: time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2024, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: true,
 		},
 		{
 			name: "Test case 2: Not leap year",
-			dt: &DateTime{
-				tm: time.Date(2023, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600)),
-			},
+			dt:   &Time{time.Date(2023, 9, 10, 10, 24, 25, 123456789, time.FixedZone("CST", 8*3600))},
 			want: false,
 		},
 	}
@@ -988,10 +933,10 @@ func TestDateTime_IsLeapYear(t *testing.T) {
 }
 
 func TestBetweenSeconds(t *testing.T) {
-	t1 := time.Date(2024, 9, 10, 10, 24, 25, 0, time.UTC)
-	t2 := time.Date(2024, 9, 10, 11, 24, 25, 0, time.UTC)
+	t1, _ := NewTimeFormStr("2024-09-10 11:24:25", "yyyy-mm-dd hh:mm:ss")
+	t2, _ := NewTimeFormStr("2024-09-10 12:24:25", "yyyy-mm-dd hh:mm:ss")
 
-	got := BetweenSeconds(t1, t2)
+	got := t1.BetweenSeconds(t2.Time)
 	want := int64(3600)
 
 	if got != want {
