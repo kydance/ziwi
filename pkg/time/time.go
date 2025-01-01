@@ -37,8 +37,9 @@ var TimeFormat = map[string]string{
 type Time struct{ time.Time }
 
 // NewTime returns a new Time with current time
-func NewTime() *Time             { return &Time{time.Now()} }
-func SetTime(tm time.Time) *Time { return &Time{tm} }
+func NewTime() *Time                   { return &Time{time.Now()} }
+func NewTimeFromTm(tm time.Time) *Time { return &Time{tm} }
+func NewTimeFromUnix(ts int64) *Time   { return &Time{time.Unix(ts, 0)} }
 
 // NewTimeFormStr converts string to DateTime
 //
@@ -64,7 +65,7 @@ func NewTimeFormStr(str, format string, timezone ...string) (*Time, error) {
 			return nil, err
 		}
 
-		return SetTime(dt), nil
+		return NewTimeFromTm(dt), nil
 	}
 
 	dt, err := time.Parse(tf, str)
@@ -72,7 +73,7 @@ func NewTimeFormStr(str, format string, timezone ...string) (*Time, error) {
 		return nil, err
 	}
 
-	return SetTime(dt), nil
+	return NewTimeFromTm(dt), nil
 }
 
 // FormatTimeToStr converts time to string

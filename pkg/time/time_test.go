@@ -17,7 +17,7 @@ func TestNewDateTime(t *testing.T) {
 
 func TestSetTime(t *testing.T) {
 	testTime := time.Date(2024, 11, 20, 12, 34, 56, 0, time.UTC)
-	tm := SetTime(testTime)
+	tm := NewTimeFromTm(testTime)
 
 	if tm.Year() != testTime.Year() || tm.Month() != testTime.Month() || tm.Day() != testTime.Day() {
 		t.Errorf("SetTime() failed, expected date to match provided date")
@@ -942,4 +942,51 @@ func TestBetweenSeconds(t *testing.T) {
 	if got != want {
 		t.Errorf("BetweenSeconds() = %v, want %v", got, want)
 	}
+}
+
+func TestNewTimeFromUnix(t *testing.T) {
+	type args struct {
+		ts int64
+	}
+	tests := []struct {
+		name string
+		args args
+		want *Time
+	}{
+		{
+			name: "Test case 1: Valid timestamp",
+			args: args{ts: 1234567890},
+			want: &Time{time.Unix(1234567890, 0)},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewTimeFromUnix(tt.args.ts); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewTimeFromUnix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestA(t *testing.T) {
+	t.Parallel()
+
+	tma := NewTimeFromUnix(1732982400)
+	t.Log(tma.Format(time.DateTime))
+	tmb := NewTimeFromUnix(1735635074)
+	t.Log(tmb.Format(time.DateTime))
+
+	//
+	tmc := NewTimeFromUnix(1733043074)
+	t.Log(tmc.Format(time.DateTime))
+
+	tmd := NewTimeFromUnix(1735635074)
+	t.Log(tmd.Format(time.DateTime))
+
+	// 1732982400,1735647420
+	tme := NewTimeFromUnix(1732982400)
+	t.Log(tme.Format(time.DateTime))
+
+	tmf := NewTimeFromUnix(1735647420)
+	t.Log(tmf.Format(time.DateTime))
 }
