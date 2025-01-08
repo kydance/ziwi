@@ -2,116 +2,64 @@ package strutil
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestToUpperAll(t *testing.T) {
-	tests := []struct {
-		input []rune
-		want  []rune
-	}{
-		{[]rune("hello"), []rune("HELLO")},
-		{[]rune("world"), []rune("WORLD")},
-		{[]rune("GoLang"), []rune("GOLANG")},
-		{[]rune(""), []rune("")},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, test := range tests {
-		result := toUpperAll(test.input)
-		if !equalRuneSlices(result, test.want) {
-			t.Errorf("toUpperAll(%q) = %q; expected %q", test.input, result, test.want)
-		}
-	}
+	assert.Equal([]rune("HELLO"), toUpperAll([]rune("hello")))
+	assert.Equal([]rune("WORLD"), toUpperAll([]rune("world")))
+	assert.Equal([]rune("GOLANG"), toUpperAll([]rune("GoLang")))
+	assert.Equal([]rune(""), toUpperAll([]rune("")))
 }
 
 func TestToLowerAll(t *testing.T) {
-	tests := []struct {
-		input []rune
-		want  []rune
-	}{
-		{[]rune("HELLO"), []rune("hello")},
-		{[]rune("WORLD"), []rune("world")},
-		{[]rune("golang"), []rune("golang")},
-		{[]rune(""), []rune("")},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, test := range tests {
-		result := toLowerAll(test.input)
-		if !equalRuneSlices(result, test.want) {
-			t.Errorf("toLowerAll(%q) = %q; expected %q", test.input, result, test.want)
-		}
-	}
+	assert.Equal([]rune("hello"), toLowerAll([]rune("HELLO")))
+	assert.Equal([]rune("world"), toLowerAll([]rune("WORLD")))
+	assert.Equal([]rune("golang"), toLowerAll([]rune("GoLang")))
+	assert.Equal([]rune(""), toLowerAll([]rune("")))
 }
 
 func TestSplitIntoStrings(t *testing.T) {
-	tests := []struct {
-		input    string
-		upper    bool
-		expected []string
-	}{
-		{"HelloWorld123", true, []string{"HELLO", "WORLD", "123"}},
-		{"HelloWorld123", false, []string{"hello", "world", "123"}},
+	t.Parallel()
+	assert := assert.New(t)
 
-		{"GoLangProgramming", true, []string{"GO", "LANG", "PROGRAMMING"}},
-		{"GoLangProgramming", false, []string{"go", "lang", "programming"}},
+	assert.Equal([]string{"HELLO", "WORLD", "123"}, splitIntoStrings("HelloWorld123", true))
+	assert.Equal([]string{"hello", "world", "123"}, splitIntoStrings("HelloWorld123", false))
 
-		{"12345!@#$%", true, []string{"12345"}},
-		{"12345!@#$%", false, []string{"12345"}},
+	assert.Equal([]string{"GO", "LANG", "PROGRAMMING"}, splitIntoStrings("GoLangProgramming", true))
+	assert.Equal([]string{"go", "lang", "programming"}, splitIntoStrings("GoLangProgramming", false))
 
-		{"", true, []string{}},
-		{"", false, []string{}},
-	}
+	assert.Equal([]string{"12345"}, splitIntoStrings("12345!@#$%", true))
+	assert.Equal([]string{"12345"}, splitIntoStrings("12345!@#$%", false))
 
-	for _, test := range tests {
-		result := splitIntoStrings(test.input, test.upper)
-		if !equalStringSlices(result, test.expected) {
-			t.Errorf(
-				"splitIntoStrings(%q, %v) = %v; expected %v",
-				test.input,
-				test.upper,
-				result,
-				test.expected,
-			)
-		}
-	}
+	assert.Equal([]string{}, splitIntoStrings("", true))
+	assert.Equal([]string{}, splitIntoStrings("", false))
 }
 
 func TestPadAtPosEdgeCases(t *testing.T) {
-	tests := []struct {
-		str  string
-		size int
-		pad  string
-		pos  int
-		want string
-	}{
-		{"", 5, "-", 0, "-----"},
-		{"", 5, "-", 1, "-----"},
-		{"", 5, "-", 2, "-----"},
+	t.Parallel()
+	assert := assert.New(t)
 
-		{"hello", 3, "", 0, "hello"},
-		{"hello", 3, "", 1, "hello"},
-		{"hello", 3, "", 2, "hello"},
+	assert.Equal("-----", padAtPos("", 5, "-", PosBoth))
+	assert.Equal("-----", padAtPos("", 5, "-", PosLeft))
+	assert.Equal("-----", padAtPos("", 5, "-", PosRight))
 
-		{"hello", 6, "*", 0, "hello*"},
-		{"hello", 6, "*", 1, "*hello"},
-		{"hello", 6, "*", 2, "hello*"},
+	assert.Equal("hello", padAtPos("hello", 3, "", PosBoth))
+	assert.Equal("hello", padAtPos("hello", 3, "", PosLeft))
+	assert.Equal("hello", padAtPos("hello", 3, "", PosRight))
 
-		{"hello", 10, "abc", 0, "abhelloabc"},
-		{"hello", 10, "abc", 1, "abcabhello"},
-		{"hello", 10, "abc", 2, "helloabcab"},
-	}
+	assert.Equal("hello*", padAtPos("hello", 6, "*", PosBoth))
+	assert.Equal("*hello", padAtPos("hello", 6, "*", PosLeft))
+	assert.Equal("hello*", padAtPos("hello", 6, "*", PosRight))
 
-	for _, test := range tests {
-		result := padAtPos(test.str, test.size, test.pad, test.pos)
-		if result != test.want {
-			t.Errorf(
-				"padAtPos(%q, %d, %q, %d) = %q; expected %q",
-				test.str,
-				test.size,
-				test.pad,
-				test.pos,
-				result,
-				test.want,
-			)
-		}
-	}
+	assert.Equal("abhelloabc", padAtPos("hello", 10, "abc", PosBoth))
+	assert.Equal("abcabhello", padAtPos("hello", 10, "abc", PosLeft))
+	assert.Equal("helloabcab", padAtPos("hello", 10, "abc", PosRight))
 }

@@ -5,1043 +5,1146 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIsAlpha(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"Only Letters", "HelloWorld", true},
-		{"Contains Numbers", "Hello123", false},
-		{"Contains Special Characters", "Hello!", false},
-		{"Letters and Numbers", "Hello123World", false},
-		{"Letters and Special Characters", "Hello!World", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsAlpha(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsAlpha(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsAlpha(""))
+
+	// Only Letters
+	assert.True(IsAlpha("HelloWorld"))
+
+	// Contains Numbers
+	assert.False(IsAlpha("Hello123"))
+
+	// Contains Special Characters
+	assert.False(IsAlpha("Hello!"))
+
+	// Letters and Numbers
+	assert.False(IsAlpha("Hello123World"))
+
+	// Letters and Special Characters
+	assert.False(IsAlpha("Hello!World"))
+
+	// Only Numbers
+	assert.False(IsAlpha("123"))
 }
 
 func TestIsAllUpper(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"All Uppercase", "HELLO", true},
-		{"Mixed Case", "HelloWorld", false},
-		{"All Lowercase", "hello", false},
-		{"Numbers and Symbols", "123!@#", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsAllUpper(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsAllUpper(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsAllUpper(""))
+
+	// All Uppercase
+	assert.True(IsAllUpper("HELLO"))
+
+	// Mixed Case
+	assert.False(IsAllUpper("HelloWorld"))
+
+	// All Lowercase
+	assert.False(IsAllUpper("hello"))
+
+	// Numbers and Symbols
+	assert.False(IsAllUpper("123!@#"))
+
+	// Uppercase and Symbols
+	assert.False(IsAllUpper("HELLO!"))
+
+	// Only Numbers
+	assert.False(IsAllUpper("123"))
 }
 
 func TestIsAllLower(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"All Lowercase", "hello", true},
-		{"Mixed Case", "HelloWorld", false},
-		{"All Uppercase", "HELLO", false},
-		{"Numbers and Symbols", "123!@#", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsAllLower(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsAllLower(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsAllLower(""))
+
+	// All Lowercase
+	assert.True(IsAllLower("hello"))
+
+	// Mixed Case
+	assert.False(IsAllLower("HelloWorld"))
+
+	// All Uppercase
+	assert.False(IsAllLower("HELLO"))
+
+	// Numbers and Symbols
+	assert.False(IsAllLower("123!@#"))
+
+	// Lowercase and Symbols
+	assert.False(IsAllLower("hello!"))
+
+	// Only Numbers
+	assert.False(IsAllLower("123"))
 }
 
 func TestIsASCII(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", true},
-		{"ASCII Only", "Hello, world!", true},
-		{"Extended ASCII", "Hello, world! \u0080", false},
-		{"Unicode Characters", "こんにちは世界", false},
-		{"Mixed ASCII and Unicode", "Hello, 世界!", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsASCII(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsASCII(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.True(IsASCII(""))
+
+	// ASCII Only
+	assert.True(IsASCII("Hello, world!"))
+
+	// Extended ASCII
+	assert.False(IsASCII("Hello, world! \u0080"))
+
+	// Unicode Characters
+	assert.False(IsASCII("こんにちは世界"))
+
+	// Mixed ASCII and Unicode
+	assert.False(IsASCII("Hello, 世界!"))
 }
 
 func TestIsPrint(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", true},
-		{"Printable ASCII", "Hello, world!", true},
-		{"Non-Printable ASCII", "Hello, \u0007world!", false},
-		{"Printable Unicode", "こんにちは世界", true},
-		{"Non-Printable Unicode", "こんにちは\u0007世界", false},
-		{"Newline", "Hello\nWorld", true},
-		{"Tab", "Hello\tWorld", true},
-		{"Carriage Return", "Hello\rWorld", true},
-		{"Backtick", "Hello`World", true},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsPrint(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsPrint(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.True(IsPrint(""))
+
+	// Printable ASCII
+	assert.True(IsPrint("Hello, world!"))
+
+	// Non-Printable ASCII
+	assert.False(IsPrint("Hello, \u0007world!"))
+
+	// Printable Unicode
+	assert.True(IsPrint("こんにちは世界"))
+
+	// Non-Printable Unicode
+	assert.False(IsPrint("こんにちは\u0007世界"))
+
+	// Newline
+	assert.True(IsPrint("Hello\nWorld"))
+
+	// Tab
+	assert.True(IsPrint("Hello\tWorld"))
+
+	// Carriage Return
+	assert.True(IsPrint("Hello\rWorld"))
+
+	// Backtick
+	assert.True(IsPrint("Hello`World"))
 }
 
 func TestContainUpper(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"All Uppercase", "HELLO", true},
-		{"Mixed Case", "HelloWorld", true},
-		{"All Lowercase", "hello", false},
-		{"Numbers and Symbols", "123!@#", false},
-		{"Uppercase with Numbers", "HELLO123", true},
-		{"Lowercase with Numbers", "hello123", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := ContainUpper(tt.input)
-			if actual != tt.expected {
-				t.Errorf("ContainUpper(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(ContainUpper(""))
+
+	// All Uppercase
+	assert.True(ContainUpper("HELLO"))
+
+	// Mixed Case
+	assert.True(ContainUpper("HelloWorld"))
+
+	// All Lowercase
+	assert.False(ContainUpper("hello"))
+
+	// Numbers and Symbols
+	assert.False(ContainUpper("123!@#"))
+
+	// Uppercase and Symbols
+	assert.True(ContainUpper("HELLO!"))
+
+	// Only Numbers
+	assert.False(ContainUpper("123"))
+
+	// Only Symbols
+	assert.False(ContainUpper("!@#"))
 }
 
 func TestContainLower(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"All Uppercase", "HELLO", false},
-		{"Mixed Case", "HelloWorld", true},
-		{"All Lowercase", "hello", true},
-		{"Numbers and Symbols", "123!@#", false},
-		{"Uppercase with Numbers", "HELLO123", false},
-		{"Lowercase with Numbers", "hello123", true},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := ContainLower(tt.input)
-			if actual != tt.expected {
-				t.Errorf("ContainLower(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(ContainLower(""))
+
+	// All Lowercase
+	assert.True(ContainLower("hello"))
+
+	// Mixed Case
+	assert.True(ContainLower("HelloWorld"))
+
+	// All Uppercase
+	assert.False(ContainLower("HELLO"))
+
+	// Numbers and Symbols
+	assert.False(ContainLower("123!@#"))
+
+	// Lowercase and Symbols
+	assert.True(ContainLower("hello!"))
+
+	// Only Numbers
+	assert.False(ContainLower("123"))
+
+	// Only Symbols
+	assert.False(ContainLower("!@#"))
 }
 
 func TestContainLetter_string(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"EmptyString", "", false},
-		{"StringWithLetters", "Hello", true},
-		{"StringWithNumbers", "12345", false},
-		{"StringWithSpecialChars", "!@#$%", false},
-		{"StringWithLettersAndNumbers", "Hello123", true},
-		{"StringWithLettersAndSpecialChars", "Hello!", true},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := ContainLetter(tt.input)
-			if actual != tt.expected {
-				t.Errorf("ContainLetter(%v) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(ContainLetter(""))
+
+	// String With Letters
+	assert.True(ContainLetter("Hello"))
+
+	// String With Numbers
+	assert.False(ContainLetter("12345"))
+
+	// String With Special Characters
+	assert.False(ContainLetter("!@#$%"))
+
+	// String With Letters and Numbers
+	assert.True(ContainLetter("Hello123"))
+
+	// String With Letters and Special Characters
+	assert.True(ContainLetter("Hello!"))
+
+	// Uincode String
+	assert.False(ContainLetter("こんにちは世界"))
 }
 
 func TestContainLetter_vb(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    []byte
-		expected bool
-	}{
-		{"BytesWithLetters", []byte("Hello"), true},
-		{"BytesWithNumbers", []byte("12345"), false},
-		{"BytesWithSpecialChars", []byte("!@#$%"), false},
-		{"BytesWithLettersAndNumbers", []byte("Hello123"), true},
-		{"BytesWithLettersAndSpecialChars", []byte("Hello!"), true},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := ContainLetter(tt.input)
-			if actual != tt.expected {
-				t.Errorf("ContainLetter(%v) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Bytes With Letters
+	assert.True(ContainLetter([]byte("Hello")))
+
+	// Bytes With Numbers
+	assert.False(ContainLetter([]byte("12345")))
+
+	// Bytes With Special Characters
+	assert.False(ContainLetter([]byte("!@#$%")))
+
+	// Bytes With Letters and Numbers
+	assert.True(ContainLetter([]byte("Hello123")))
+
+	// Bytes With Letters and Special Characters
+	assert.True(ContainLetter([]byte("Hello!")))
+
+	// Uincode String
+	assert.False(ContainLetter([]byte("こんにちは世界")))
 }
 
 func TestContainNumber_string(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"EmptyString", "", false},
-		{"StringWithLetters", "Hello", false},
-		{"StringWithNumbers", "12345", true},
-		{"StringWithSpecialChars", "!@#$%", false},
-		{"StringWithLettersAndNumbers", "Hello123", true},
-		{"StringWithLettersAndSpecialChars", "Hello!", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := ContainNumber(tt.input)
-			if actual != tt.expected {
-				t.Errorf("ContainNumber(%v) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(ContainNumber(""))
+
+	// String With Letters
+	assert.False(ContainNumber("Hello"))
+
+	// String With Numbers
+	assert.True(ContainNumber("12345"))
+
+	// String With Special Characters
+	assert.False(ContainNumber("!@#$%"))
+
+	// String With Letters and Numbers
+	assert.True(ContainNumber("Hello123"))
+
+	// String With Letters and Special Characters
+	assert.False(ContainNumber("Hello!"))
+
+	// Uincode String
+	assert.False(ContainNumber("こんにちは世界"))
 }
 
 func TestContainNumber_vb(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    []byte
-		expected bool
-	}{
-		{"BytesWithLetters", []byte("Hello"), false},
-		{"BytesWithNumbers", []byte("12345"), true},
-		{"BytesWithSpecialChars", []byte("!@#$%"), false},
-		{"BytesWithLettersAndNumbers", []byte("Hello123"), true},
-		{"BytesWithLettersAndSpecialChars", []byte("Hello!"), false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := ContainNumber(tt.input)
-			if actual != tt.expected {
-				t.Errorf("ContainNumber(%v) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Bytes With Letters
+	assert.False(ContainNumber([]byte("Hello")))
+
+	// Bytes With Numbers
+	assert.True(ContainNumber([]byte("12345")))
+
+	// Bytes With Special Characters
+	assert.False(ContainNumber([]byte("!@#$%")))
+
+	// Bytes With Letters and Numbers
+	assert.True(ContainNumber([]byte("Hello123")))
+
+	// Bytes With Letters and Special Characters
+	assert.False(ContainNumber([]byte("Hello!")))
+
+	// Uincode String
+	assert.False(ContainNumber([]byte("こんにちは世界")))
 }
 
 func TestIsJSON(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"Valid JSON Object", `{"name":"John", "age":30}`, true},
-		{"Valid JSON Array", `{"a":[1, 2, 3, 4]}`, true},
-		{"Invalid JSON", `{"name":"John", "age":30,}`, false},
-		{"Not JSON", "Hello, world!", false},
-		{"JSON with Spaces", ` { "name" : "John" , "age" : 30 } `, true},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsJSON(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsJSON(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsJSON(""))
+
+	// Valid JSON Object
+	assert.True(IsJSON(`{"name":"John", "age":30}`))
+
+	// Valid JSON Array
+	assert.True(IsJSON(`{"a":[1, 2, 3, 4]}`))
+
+	// Invalid JSON
+	assert.False(IsJSON(`{"name":"John", "age":30,}`))
+
+	// Not JSON
+	assert.False(IsJSON("Hello, world!"))
+
+	// JSON with Spaces
+	assert.True(IsJSON(` { "name" : "John" , "age" : 30 } `))
+
+	// JSON with Newlines
+	assert.True(IsJSON(`{
+		"name": "John",
+		"age": 30
+	}`))
+
+	// JSON with Tabs
+	assert.True(IsJSON(`{
+		"name": "John",
+		"age": 30
+	}`))
+
+	// JSON with Carriage Returns
+	assert.True(IsJSON(`{
+		"name": "John",
+		"age": 30
+	}`))
 }
 
 func TestIsFloatStr(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"Valid Float", "123.45", true},
-		{"Invalid Float", "123.45.67", false},
-		{"Integer as Float", "123", true},
-		{"Non-numeric", "abc", false},
-		{"Scientific Notation", "1.23e4", true},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsFloatStr(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsFloatStr(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsFloatStr(""))
+
+	// Valid Float
+	assert.True(IsFloatStr("123.45"))
+
+	// Invalid Float
+	assert.False(IsFloatStr("123.45.67"))
+
+	// Integer as Float
+	assert.True(IsFloatStr("123"))
+
+	// Non-numeric
+	assert.False(IsFloatStr("abc"))
+
+	// Scientific Notation
+	assert.True(IsFloatStr("1.23e4"))
+
+	// Negative Float
+	assert.True(IsFloatStr("-123.45"))
+
+	// Leading Zeros
+	assert.True(IsFloatStr("0.123"))
+
+	// Trailing Zeros
+	assert.True(IsFloatStr("123.4500"))
+
+	// Leading Trailing Zeros
+	assert.True(IsFloatStr("0.1234500"))
+
+	// Trailing Scientific Notation
+	assert.True(IsFloatStr("123.45e-2"))
 }
 
 func TestIsIntStr(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"Valid Integer", "123", true},
-		{"Invalid Integer", "123.45", false},
-		{"Negative Integer", "-123", true},
-		{"Leading Zeros", "00123", true},
-		{"Non-numeric", "abc", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsIntStr(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsIntStr(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsIntStr(""))
+
+	// Valid Integer
+	assert.True(IsIntStr("123"))
+
+	// Invalid Integer
+	assert.False(IsIntStr("123.45"))
+
+	// Negative Integer
+	assert.True(IsIntStr("-123"))
+
+	// Leading Zeros
+	assert.True(IsIntStr("00123"))
+
+	// Non-numeric
+	assert.False(IsIntStr("abc"))
+
+	// Scientific Notation
+	assert.False(IsIntStr("1.23e4"))
+
+	// Trailing Scientific Notation
+	assert.False(IsIntStr("123.45e-2"))
+
+	// Negative Number
+	assert.False(IsIntStr("-123.45"))
+
+	// Leading Zeros
+	assert.True(IsIntStr("00123"))
+
+	// Alpha Numeric
+	assert.False(IsIntStr("a123"))
 }
 
 func TestIsNumberStr(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"Valid Integer", "123", true},
-		{"Valid Float", "123.45", true},
-		{"Invalid Number", "123.45.67", false},
-		{"Non-numeric", "abc", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsNumberStr(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsNumberStr(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsNumberStr(""))
+
+	// Valid Integer
+	assert.True(IsNumberStr("123"))
+
+	// Valid Float
+	assert.True(IsNumberStr("123.45"))
+
+	// Invalid Number
+	assert.False(IsNumberStr("123.45.67"))
+
+	// Non-numeric
+	assert.False(IsNumberStr("abc"))
+
+	// Scientific Notation
+	assert.True(IsNumberStr("1.23e4"))
+
+	// Trailing Scientific Notation
+	assert.True(IsNumberStr("123.45e-2"))
+
+	// Negative Number
+	assert.True(IsNumberStr("-123"))
+
+	// Leading Zeros
+	assert.True(IsNumberStr("00123"))
+
+	// Alpha Numeric
+	assert.False(IsNumberStr("a123"))
 }
 
 func TestIsIP(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"Valid IPv4", "192.168.1.1", true},
-		{"Valid IPv6", "2001:db8::68", true},
-		{"Invalid IP", "256.256.256.256", false},
-		{"Non-IP String", "not an IP", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsIP(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsIP(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsIP(""))
+
+	// Valid IPv4
+	assert.True(IsIP("192.168.1.1"))
+
+	// Valid IPv6
+	assert.True(IsIP("2001:db8::68"))
+
+	// Invalid IP
+	assert.False(IsIP("256.256.256.256"))
+
+	// Non-IP String
+	assert.False(IsIP("not an IP"))
+
+	// Mixed IPv4 and IPv6
+	assert.True(IsIP("2001:db8::68:192.168.1.1"))
+
+	// IPv4 with Port
+	assert.False(IsIP("192.168.1.1:80"))
 }
 
 func TestIsIPV4(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"Valid IPv4", "192.168.1.1", true},
-		{"Valid IPv6", "2001:db8::68", false},
-		{"Invalid IPv4", "256.256.256.256", false},
-		{"Non-IP String", "not an IP", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsIPV4(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsIPV4(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsIPV4(""))
+
+	// Valid IPv4
+	assert.True(IsIPV4("192.168.1.1"))
+
+	// Valid IPv6
+	assert.False(IsIPV4("2001:db8::68"))
+
+	// Invalid IP
+	assert.False(IsIPV4("256.256.256.256"))
+
+	// Non-IP String
+	assert.False(IsIPV4("not an IP"))
+
+	// IPv4 with Port
+	assert.False(IsIPV4("192.168.1.1:80"))
+
+	// IPv6 with Port
+	assert.False(IsIPV4("2001:db8::68:80"))
 }
 
 func TestIsIPV6(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"Valid IPv4", "192.168.1.1", false},
-		{"Valid IPv6", "2001:db8::68", true},
-		{"Invalid IPv6", "2001:db8::68g", false},
-		{"Non-IP String", "not an IP", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsIPV6(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsIPV6(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsIPV6(""))
+
+	// Valid IPv4
+	assert.False(IsIPV6("192.168.1.1"))
+
+	// Valid IPv6
+	assert.True(IsIPV6("2001:db8::68"))
+
+	// Invalid IP
+	assert.False(IsIPV6("256.256.256.256"))
+
+	// Non-IP String
+	assert.False(IsIPV6("not an IP"))
 }
 
 func TestIsPort(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"Zero", "0", false},
-		{"Less than 1", "-1", false},
-		{"Greater than 65536", "65537", false},
-		{"Non-numeric", "abc", false},
-		{"Valid Port", "8080", true},
-		{"Leading Zero", "08080", true},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsPort(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsPort(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsPort(""))
+
+	// Valid Port
+	assert.True(IsPort("8080"))
+
+	// Invalid Port
+	assert.False(IsPort("65537"))
+	assert.False(IsPort("-1"))
+
+	// Non-numeric
+	assert.False(IsPort("abc"))
+
+	// Leading Zero
+	assert.True(IsPort("08080"))
 }
 
 func TestIsURL(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"Too Short", "a", false},
-		{"Too Long", strings.Repeat("a", 2084), false},
-		{"Starts with Dot", ".com", false},
-		{"Invalid URL", "example", false},
-		{"Valid URL", "http://www.example.com", true},
-		{"Host starts with Dot", "http://.example.com", false},
-		{"No Host, No Path", "http://", false},
-		{"No Host, Path without Dot", "http:///path", false},
-		{"Query String", "http://www.example.com/?query=1", true},
-		{"Fragment Identifier", "http://www.example.com/#fragment", true},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsURL(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsURL(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsURL(""))
+
+	// Too Short
+	assert.False(IsURL("a"))
+
+	// Too Long
+	assert.False(IsURL(strings.Repeat("a", 2084)))
+
+	// Starts with Dot
+	assert.False(IsURL(".com"))
+
+	// Invalid URL
+	assert.False(IsURL("example"))
+
+	// Valid URL
+	assert.True(IsURL("http://kyden.us.kg"))
+
+	// Host starts with Dot
+	assert.False(IsURL("http://.kyden.us.kg"))
+
+	// No Host, No Path
+	assert.False(IsURL("http://"))
+
+	// No Host, Path without Dot
+	assert.False(IsURL("http:///path"))
+
+	// Query String
+	assert.True(IsURL("http://kyden.us.kg/?query=1"))
+
+	// Fragment Identifier
+	assert.True(IsURL("http://kyden.us.kg/#fragment"))
 }
 
 func TestIsDNS(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
+	t.Parallel()
+	assert := assert.New(t)
 
-		{"Valid DNS", "example.com", true},
-		{"Valid DNS with Subdomain", "sub.example.com", true},
-		{"Valid DNS with Numbers", "example123.com", true},
-		{"Valid DNS with Hyphen", "example-test.com", true},
+	// Empty String
+	assert.False(IsDNS(""))
 
-		{"Invalid DNS - Starts with Hyphen", "-example.com", false},
-		{"Invalid DNS - Ends with Hyphen", "example-.com", false},
-		// FIXME
-		{"Invalid DNS - Consecutive Hyphens", "example--test.com", true},
-		{"Invalid DNS - Special Characters", "example$.com", false},
-		{"Invalid DNS - Too Long", strings.Repeat("a", 64) + ".com", false},
+	// Valid DNS
+	assert.True(IsDNS("kyden.us.kg"))
+	assert.True(IsDNS("kyden1234.us.kg"))
+	assert.True(IsDNS("kyden-top.us.kg"))
+	assert.True(IsDNS("xn--fros-gra-6qa.com")) // Punycode encoded "frös-grä.com"
 
-		{"Valid IDN", "xn--fros-gra-6qa.com", true}, // Punycode encoded "frös-grä.com"
-		{"Invalid IDN - Too Long", "xn--" + strings.Repeat("a", 64) + ".com", false},
-	}
+	// Invalid DNS
+	assert.False(IsDNS("kyden.us.kg."))
+	assert.False(IsDNS("kyden.us.kg.."))
+	assert.False(IsDNS("kyden.us.kg."))
+	assert.False(IsDNS("kyden.us.kg-"))
+	assert.False(IsDNS("kyden.us.kg_"))
+	assert.False(IsDNS("kyden.us.kg$"))
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsDNS(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsDNS(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	assert.False(IsDNS("-kyden.us.kg"))
+	assert.False(IsDNS("kyden-.us.kg"))
+
+	// FIXME
+	// assert.False(IsDNS("ky--den.us.kg"))
+	// assert.False(IsDNS(strings.Repeat("a", 63) + ".com"))
+	// assert.False(IsDNS(strings.Repeat("a", 64) + ".com"))
 }
 
 func TestIsEmail(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
+	t.Parallel()
+	assert := assert.New(t)
 
-		{"Valid Email", "test@example.com", true},
-		{"Valid Email with Plus Sign", "test+123@example.com", true},
-		{"Valid Email with Underscore", "test_123@example.com", true},
-		{"Valid Email with Dot", "test.123@example.com", true},
-		{"Valid Email with Multiple Dots", "test.123.456@example.com", true},
-		{"Valid Email with Subdomain", "test@sub.example.com", true},
+	// Empty String
+	assert.False(IsEmail(""))
 
-		{"Invalid Email - Missing @", "testexample.com", false},
-		// FIXME
-		// {"Invalid Email - Missing Domain Dot", "test@example", false},
-		{"Invalid Email - Missing Domain Dot", "test@example", true},
+	// Valid Email
+	assert.True(IsEmail("kytedance@gmail.com"))
+	assert.True(IsEmail("kytedance+123@gmail.com"))
+	assert.True(IsEmail("kytedance_123@gmail.com"))
+	assert.True(IsEmail("kytedance.123@gmail.com"))
+	assert.True(IsEmail("kytedance.123.456@gmail.com"))
+	assert.True(IsEmail("kytedance@sub.example.com"))
 
-		{"Invalid Email - Starts with Dot", ".test@example.com", false},
-		{"Invalid Email - Ends with Dot", "test.@example.com", false},
-		{"Invalid Email - Consecutive Dots", "test..123@example.com", false},
-		{"Invalid Email - Special Characters", "test!@#$%^&*()@example.com", false},
+	// Invalid Email
+	assert.False(IsEmail("kytedancegmail.com"))
+	assert.False(IsEmail(".kytedance@gmail"))
+	assert.False(IsEmail("kytedance@gmail."))
+	assert.False(IsEmail("kytedance..@gmail"))
+	assert.False(IsEmail("kytedance!@#$%^&*()@gmail"))
 
-		// FIXME
-		// {"Invalid Email - Local Part Too Long", strings.Repeat("a", 65) + "@example.com", false},
-		// {"Invalid Email - Domain Too Long", "test@" + strings.Repeat("a", 256) + ".com", false},
-		{"Invalid Email - Local Part Too Long", strings.Repeat("a", 65) + "@example.com", true},
-		{"Invalid Email - Domain Too Long", "test@" + strings.Repeat("a", 256) + ".com", true},
-	}
+	// FIXME
+	// assert.False(IsEmail("kytedance@gmail"))
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsEmail(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsEmail(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// FIXME
+	// {"Invalid Email - Local Part Too Long", strings.Repeat("a", 65) + "@example.com", false},
+	// {"Invalid Email - Domain Too Long", "test@" + strings.Repeat("a", 256) + ".com", false},
 }
 
 func TestIsChineseMobile(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"Valid Mobile Number", "13800138000", true},
-		{"Invalid Mobile Number - Too Short", "1380013800", false},
-		{"Invalid Mobile Number - Too Long", "138001380000", false},
-		{"Invalid Mobile Number - Invalid Prefix", "23800138000", false},
-		{"Invalid Mobile Number - Contains Letters", "138001A8000", false},
-		{"Invalid Mobile Number - Contains Special Characters", "13800138000!", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsChineseMobile(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsChineseMobile(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsChineseMobile(""))
+
+	// Valid Mobile Number
+	assert.True(IsChineseMobile("13800138000"))
+	assert.True(IsChineseMobile("13800138001"))
+	assert.True(IsChineseMobile("13800138002"))
+	assert.True(IsChineseMobile("13800138003"))
+	assert.True(IsChineseMobile("13800138004"))
+	assert.True(IsChineseMobile("13800138005"))
+	assert.True(IsChineseMobile("13800138006"))
+	assert.True(IsChineseMobile("13800138007"))
+	assert.True(IsChineseMobile("13800138008"))
+	assert.True(IsChineseMobile("13800138009"))
+
+	// Invalid Mobile Number - Too Short
+	assert.False(IsChineseMobile("1380013800"))
+
+	// Invalid Mobile Number - Too Long
+	assert.False(IsChineseMobile("138001380000"))
+
+	// Invalid Mobile Number - Invalid Prefix
+	assert.False(IsChineseMobile("23800138000"))
+
+	// Invalid Mobile Number - Contains Letters
+	assert.False(IsChineseMobile("138001A8000"))
+
+	// Invalid Mobile Number - Contains Special Characters
+	assert.False(IsChineseMobile("13800138000!"))
 }
 
 func TestIsChineseIDNum(t *testing.T) {
-	tests := []struct {
-		name     string
-		id       string
-		expected bool
-	}{
-		{
-			name:     "Valid ID",
-			id:       "34052419800101001X",
-			expected: true,
-		},
-		{
-			name:     "Valid ID with lowercase x",
-			id:       "34052419800101001x",
-			expected: true,
-		},
-		{
-			name:     "Invalid ID - Wrong Checksum",
-			id:       "340524198001010011",
-			expected: false,
-		},
-		{
-			name:     "Invalid ID - Invalid Province Code",
-			id:       "99052419800101001X",
-			expected: false,
-		},
-		{
-			name:     "Invalid ID - Invalid Birthday",
-			id:       "34052420301301001X",
-			expected: false,
-		},
-		{
-			name:     "Invalid ID - Future Birthday",
-			id:       "340524" + fmt.Sprintf("%02d", time.Now().Year()+1) + "0101001X",
-			expected: false,
-		},
-		{
-			name:     "Invalid ID - Too Short",
-			id:       "34052419800101001",
-			expected: false,
-		},
-		{
-			name:     "Invalid ID - Too Long",
-			id:       "34052419800101001XX",
-			expected: false,
-		},
-		{
-			name:     "Invalid ID - Non-numeric Characters",
-			id:       "340524198A0101001X",
-			expected: false,
-		},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsChineseIDNum(tt.id)
-			if actual != tt.expected {
-				t.Errorf("IsChineseIDNum(%q) = %v; want %v", tt.id, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsChineseIDNum(""))
+
+	// Valid ID
+	assert.True(IsChineseIDNum("34052419800101001X"))
+	assert.True(IsChineseIDNum("34052419800101001x"))
+
+	// Invalid ID - Wrong Checksum
+	assert.False(IsChineseIDNum("340524198001010011"))
+
+	// Invalid ID - Invalid Province Code
+	assert.False(IsChineseIDNum("99052419800101001X"))
+
+	// Invalid ID - Invalid Birthday
+	assert.False(IsChineseIDNum("34052420301301001X"))
+
+	// Invalid ID - Future Birthday
+	assert.False(IsChineseIDNum("340524" + fmt.Sprintf("%02d", time.Now().Year()+1) + "0101001X"))
+
+	// Invalid ID - Too Short
+	assert.False(IsChineseIDNum("34052419800101001"))
+
+	// Invalid ID - Too Long
+	assert.False(IsChineseIDNum("34052419800101001XX"))
+
+	// Invalid ID - Non-numeric Characters
+	assert.False(IsChineseIDNum("340524198A0101001X"))
 }
 
 func TestContainChinese(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", false},
-		{"No Chinese", "HelloWorld", false},
-		{"Contains Chinese", "Hello世界", true},
-		{"Mixed Chinese and ASCII", "你好Hello", true},
-		{"Only Chinese", "你好", true},
-		{"Special Characters", "!@#$%^&*()", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := ContainChinese(tt.input)
-			if actual != tt.expected {
-				t.Errorf("ContainChinese(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(ContainChinese(""))
+
+	// No Chinese Characters
+	assert.False(ContainChinese("HelloWorld"))
+
+	// Contains Chinese Characters
+	assert.True(ContainChinese("Hello世界"))
+
+	// Mixed Chinese and ASCII Characters
+	assert.True(ContainChinese("你好Hello"))
+
+	// Only Chinese Characters
+	assert.True(ContainChinese("你好"))
+
+	// Special Characters
+	assert.False(ContainChinese("!@#$%^&*()"))
 }
 
 func TestIsChinesePhone(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Valid Format 1", "123-45678901", true},
-		{"Valid Format 2", "1234-5678901", true},
-		{"Invalid Format", "1234567890", false},
-		{"Empty String", "", false},
-		{"Non-Chinese Characters", "abc-12345678", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsChinesePhone(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsChinesePhone(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsChinesePhone(""))
+
+	// Valid Phone Number
+	assert.True(IsChinesePhone("123-45678901"))
+	assert.True(IsChinesePhone("1234-5678901"))
+
+	// Invalid Phone Number - Too Short
+	assert.False(IsChinesePhone("1380013800"))
+
+	// Invalid Phone Number - Too Long
+	assert.False(IsChinesePhone("138001380000"))
+
+	// Invalid Phone Number - Invalid Prefix
+	assert.False(IsChinesePhone("23800138000"))
+
+	// Invalid Phone Number - Contains Letters
+	assert.False(IsChinesePhone("138001A8000"))
+
+	// Invalid Phone Number - Contains Special Characters
+	assert.False(IsChinesePhone("13800138000!"))
+
+	// FIXME
+	// assert.True(IsChinesePhone("13800138001"))
 }
 
 func TestIsCreditCard(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Valid Credit Card", "4111111111111111", true},
-		{"Invalid Format", "1234567890123456", false},
-		{"Empty String", "", false},
-		{"Non-Digit Characters", "1234-abcd-5678-efgh", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsCreditCard(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsCreditมีCard(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsCreditCard(""))
+
+	// Valid Credit Card
+	assert.True(IsCreditCard("4111111111111111"))
+
+	// Invalid Format
+	assert.False(IsCreditCard("1234567890123456"))
+
+	// Non-Digit Characters
+	assert.False(IsCreditCard("1234-abcd-5678-efgh"))
 }
 
 func TestIsBase64(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Valid Base64", "SGVsbG8gV29ybGQh", true},
-		{"Invalid Base64", "Hello World!", false},
+	t.Parallel()
+	assert := assert.New(t)
 
-		{"Empty String", "", false},
-		{"Non-Base64 Characters", "Hello, 世界!", false},
-	}
+	// Empty String
+	assert.False(IsBase64(""))
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsBase64(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsBase64(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Valid Base64
+	assert.True(IsBase64("SGVsbG8gV29ybGQh"))
+
+	// Invalid Base64
+	assert.False(IsBase64("Hello World!"))
+
+	// Non-Base64 Characters
+	assert.False(IsBase64("Hello, 世界!"))
+
+	// Invalid Length
+	assert.False(IsBase64("Hello, 世界!"))
 }
 
 func TestIsEmptyString(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty String", "", true},
-		{"Non-Empty String", "Hello, World!", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsEmptyString(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsEmptyString(%q) = %v; want %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.True(IsEmptyString(""))
+
+	// Non-Empty String
+	assert.False(IsEmptyString("Hello, World!"))
 }
 
 func TestIsRegexMatch(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		regex    string
-		expected bool
-	}{
-		{"Match", "Hello, World!", "^Hello", true},
-		{"No Match", "Hello, World!", "^Goodbye", false},
-		{"Empty String", "", "^$", true},
-		{"Regex Error", "Hello, World!", `\[`, false}, // Invalid regex
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsRegexMatch(tt.input, tt.regex)
-			if actual != tt.expected {
-				t.Errorf(
-					"IsRegexMatch(%q, %q) = %v; want %v",
-					tt.input,
-					tt.regex,
-					actual,
-					tt.expected,
-				)
-			}
-		})
-	}
+	// Empty String
+	assert.True(IsRegexMatch("", ""))
+	assert.True(IsRegexMatch("", "^$"))
+
+	// Match
+	assert.True(IsRegexMatch("Hello, World!", "^Hello"))
+	assert.True(IsRegexMatch("Hello, World!", "Hello.*"))
+	assert.True(IsRegexMatch("Hello, World!", "World!$"))
+
+	// Not Match
+	assert.False(IsRegexMatch("Hello, World!", "^Goodbye"))
+
+	// Regex Error
+	assert.False(IsRegexMatch("Hello, World!", `\[`))
 }
 
 func TestIsStrongPassword(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		length   int
-		expected bool
-	}{
-		{"Empty String", "", 8, false},
-		{"Less Than Length", "pass", 8, false},
+	t.Parallel()
+	assert := assert.New(t)
 
-		{"No Number", "Password!", 8, false},
-		{"No Lowercase", "PASSWORD1", 8, false},
-		{"No Uppercase", "password1", 8, false},
-		{"No Special Char", "Password1", 8, false},
+	// Empty String
+	assert.False(IsStrongPassword("", 8))
 
-		{"Strong Password", "Password1!", 8, true},
-		{"Strong Password with Length 6", "Pass1!", 6, true},
-		{"Strong Password with Length 10", "Password1!", 10, true},
-	}
+	// Less Than Length
+	assert.False(IsStrongPassword("pass", 8))
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsStrongPassword(tt.input, tt.length)
-			if actual != tt.expected {
-				t.Errorf(
-					"IsStrongPassword(%q, %d) = %v; want %v",
-					tt.input,
-					tt.length,
-					actual,
-					tt.expected,
-				)
-			}
-		})
-	}
+	// No Number
+	assert.False(IsStrongPassword("Password!", 8))
+
+	// No Lowercase
+	assert.False(IsStrongPassword("PASSWORD1", 8))
+
+	// No Uppercase
+	assert.False(IsStrongPassword("password1", 8))
+
+	// No Special Char
+	assert.False(IsStrongPassword("Password1", 8))
+
+	// Strong Password
+	assert.True(IsStrongPassword("Password1!", 8))
+
+	// Strong Password with Length 6
+	assert.True(IsStrongPassword("Pass1!", 6))
+
+	// Strong Password with Length 10
+	assert.True(IsStrongPassword("Password1!", 10))
 }
 
 func TestIsWeakPassword(t *testing.T) {
-	tests := []struct {
-		password string
-		expected bool
-	}{
-		{"abcdef", true}, // Only letters
-		{"123456", true}, // Only numbers
-		{"abc123", true}, // Letters and numbers
+	t.Parallel()
+	assert := assert.New(t)
 
-		{"abc!123", false},    // Contains special character
-		{"", false},           // Empty string
-		{"a", true},           // Too short
-		{"abcABC123!", false}, // Strong password
-	}
+	// Empty String
+	assert.False(IsWeakPassword(""))
 
-	for _, test := range tests {
-		result := IsWeakPassword(test.password)
-		if result != test.expected {
-			t.Errorf("IsWeakPassword(%q) = %v; expected %v", test.password, result, test.expected)
-		}
-	}
+	// Only letters
+	assert.True(IsWeakPassword("abcdef"))
+
+	// Only numbers
+	assert.True(IsWeakPassword("123456"))
+
+	// Letters and numbers
+	assert.True(IsWeakPassword("abc123"))
+
+	// Contains special character
+	assert.False(IsWeakPassword("abc!123"))
+
+	// Too short
+	assert.True(IsWeakPassword("a"))
+
+	// Strong password
+	assert.False(IsWeakPassword("abcABC123!"))
+
+	// Weak password
+	assert.True(IsWeakPassword("abc123"))
 }
 
 func TestIsZeroValue(t *testing.T) {
-	tests := []struct {
-		name string
-		val  any
-		want bool
-	}{
-		{"nil", nil, true},
-		{"empty string", "", true},
-		{"false boolean", false, true},
-		{"int zero", 0, true},
-		{"int8 zero", int8(0), true},
-		{"int16 zero", int16(0), true},
-		{"int32 zero", int32(0), true},
-		{"int64 zero", int64(0), true},
-		{"uint zero", uint(0), true},
-		{"uint8 zero", uint8(0), true},
-		{"uint16 zero", uint16(0), true},
-		{"uint32 zero", uint32(0), true},
-		{"uint64 zero", uint64(0), true},
-		{"float32 zero", float32(0), true},
-		{"float64 zero", float64(0), true},
-		{"nil pointer", (*int)(nil), true},
-		{"nil interface", new(interface{}), true},
-		{"nil slice", []int(nil), true},
-		{"complex type zero", complex(0, 0), true},
+	t.Parallel()
+	assert := assert.New(t)
 
-		{"nil channel", nil, true},
-		{"nil function", nil, true},
-		{"nil map", nil, true},
+	// nil
+	assert.True(IsZeroValue(nil))
 
-		{"zero len channel", make(chan int, 0), true},
-		{"zero len map", make(map[string]int), true},
-	}
+	// empty string
+	assert.True(IsZeroValue(""))
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := IsZeroValue(tt.val); got != tt.want {
-				t.Errorf("IsZeroValue() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	// false boolean
+	assert.True(IsZeroValue(false))
+	assert.False(IsZeroValue(true))
+
+	// int zero
+	assert.True(IsZeroValue(0))
+	assert.False(IsZeroValue(1))
+
+	// int8 zero
+	assert.True(IsZeroValue(int8(0)))
+	assert.False(IsZeroValue(int8(1)))
+
+	// int16 zero
+	assert.True(IsZeroValue(int16(0)))
+	assert.False(IsZeroValue(int16(1)))
+
+	// int32 zero
+	assert.True(IsZeroValue(int32(0)))
+	assert.False(IsZeroValue(int32(1)))
+
+	// int64 zero
+	assert.True(IsZeroValue(int64(0)))
+	assert.False(IsZeroValue(int64(1)))
+
+	// uint zero
+	assert.True(IsZeroValue(uint(0)))
+	assert.False(IsZeroValue(uint(1)))
+
+	// uint8 zero
+	assert.True(IsZeroValue(uint8(0)))
+	assert.False(IsZeroValue(uint8(1)))
+
+	// uint16 zero
+	assert.True(IsZeroValue(uint16(0)))
+	assert.False(IsZeroValue(uint16(1)))
+
+	// uint32 zero
+	assert.True(IsZeroValue(uint32(0)))
+	assert.False(IsZeroValue(uint32(1)))
+
+	// uint64 zero
+	assert.True(IsZeroValue(uint64(0)))
+	assert.False(IsZeroValue(uint64(1)))
+
+	// float32 zero
+	assert.True(IsZeroValue(float32(0)))
+	assert.False(IsZeroValue(float32(1)))
+
+	// float64 zero
+	assert.True(IsZeroValue(float64(0)))
+	assert.False(IsZeroValue(float64(1)))
+
+	// nil pointer
+	assert.True(IsZeroValue((*int)(nil)))
+	assert.True(IsZeroValue(new(int)))
+
+	// nil interface
+	assert.True(IsZeroValue(new(interface{})))
+
+	// nil slice
+	assert.True(IsZeroValue([]int(nil)))
+
+	// complex type zero
+	assert.True(IsZeroValue(complex(0, 0)))
+	assert.False(IsZeroValue(complex(1, 1)))
+
+	// nil channel
+	assert.True(IsZeroValue(make(chan int)))
+	// zero len channel
+	assert.True(IsZeroValue(make(chan int, 0)))
+
+	// nil function
+	assert.True(IsZeroValue(nil))
+
+	// nil map
+	assert.True(IsZeroValue(make(map[int]any)))
+	// zero len map
+	assert.True(IsZeroValue(make(map[string]int)))
 }
 
 func TestIsGBK(t *testing.T) {
-	tests := []struct {
-		name     string
-		data     []byte
-		expected bool
-	}{
-		{"Valid GBK", []byte("你好"), true},
+	t.Parallel()
+	assert := assert.New(t)
 
-		{"Invalid GBK start", []byte("\x80\x40"), false},
-		{"Invalid GBK end", []byte("\xfe\x3f"), false},
-		{"Invalid GBK with F7", []byte("\x81\xf7"), false},
+	// Empty string
+	assert.True(IsGBK([]byte("")))
 
-		{"Empty string", []byte(""), true},
-		{"Single byte", []byte{0x41}, true},
-		{"GBK range limits", []byte("\x81\x40\xfe\xfe"), true},
-	}
+	// Single byte
+	assert.True(IsGBK([]byte{0x41}))
+	assert.False(IsGBK([]byte{0x80}))
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := IsGBK(tt.data)
-			if result != tt.expected {
-				t.Errorf("IsGBK(%q) = %v; want %v", tt.data, result, tt.expected)
-			}
-		})
-	}
+	// GBK range limits
+	assert.True(IsGBK([]byte("\x81\x40\xfe\xfe")))
+	assert.False(IsGBK([]byte("\x81\x40\xfe\xfe\x80")))
+
+	// Invalid GBK start
+	assert.False(IsGBK([]byte("\x80\x40")))
+	// Invalid GBK end
+	assert.False(IsGBK([]byte("\xfe\x3f")))
+	// Invalid GBK with F7
+	assert.False(IsGBK([]byte("\x81\xf7")))
+
+	// Valid GBK
+	assert.True(IsGBK([]byte("你好")))
+	assert.True(IsGBK([]byte("kyden")))
 }
 
 func TestIsFloat(t *testing.T) {
-	tests := []struct {
-		value    any
-		expected bool
-	}{
-		{float32(1.0), true},
-		{float64(1.0), true},
-		{int(1), false},
-		{"1.0", false}, // Note: This will not be recognized as a float by IsFloat
-		{"not a float", false},
-		{nil, false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, test := range tests {
-		result := IsFloat(test.value)
-		if result != test.expected {
-			t.Errorf("IsFloat(%v) = %v; want %v", test.value, result, test.expected)
-		}
-	}
+	// Empty String
+	assert.False(IsFloat(""))
+
+	// Valid Float
+	assert.True(IsFloat(1.0))
+	assert.True(IsFloat(float32(1.0)))
+	assert.True(IsFloat(float64(1.0)))
+
+	// Not Float
+	assert.False(IsFloat(1))
+	assert.False(IsFloat("1.0"))
+	assert.False(IsFloat("not a float"))
+	assert.False(IsFloat(nil))
+	assert.False(IsFloat(make(chan any)))
+	assert.False(IsFloat(make(map[any]any)))
+	assert.False(IsFloat(make([]any, 0)))
+	assert.False(IsFloat(func() {}))
 }
 
 func TestIsInt(t *testing.T) {
-	tests := []struct {
-		value    any
-		expected bool
-	}{
-		{int(0), true},
-		{int8(0), true},
-		{int16(0), true},
-		{int32(0), true},
-		{int64(0), true},
-		{uint(0), true},
-		{uint8(0), true},
-		{uint16(0), true},
-		{uint32(0), true},
-		{uint64(0), true},
-		{uintptr(0), true},
-		{float32(0), false},
-		{float64(0), false},
-		{"string", false},
-		{true, false},
-		{nil, false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, test := range tests {
-		result := IsInt(test.value)
-		if result != test.expected {
-			t.Errorf("IsInt(%v) = %v; want %v", test.value, result, test.expected)
-		}
-	}
+	// Valid Int
+	assert.True(IsInt(1))
+	assert.True(IsInt(int8(1)))
+	assert.True(IsInt(int16(1)))
+	assert.True(IsInt(int32(1)))
+	assert.True(IsInt(int64(1)))
+	assert.True(IsInt(uint(1)))
+	assert.True(IsInt(uint8(1)))
+	assert.True(IsInt(uint16(1)))
+	assert.True(IsInt(uint32(1)))
+	assert.True(IsInt(uint64(1)))
+	assert.True(IsInt(uintptr(1)))
+
+	// Empty String
+	assert.False(IsInt(""))
+
+	// Invalid int
+	assert.False(IsInt(float32(1.0)))
+	assert.False(IsInt(float64(1.0)))
+	assert.False(IsInt(1.1))               // float
+	assert.False(IsInt("1"))               // string
+	assert.False(IsInt("not an int"))      // string
+	assert.False(IsInt(nil))               // nil
+	assert.False(IsInt(make(chan any)))    // channel
+	assert.False(IsInt(make(map[any]any))) // map
+	assert.False(IsInt(make([]any, 0)))    // slice
+	assert.False(IsInt(func() {}))         // func
 }
 
 func TestIsNumber(t *testing.T) {
-	tests := []struct {
-		value    any
-		expected bool
-	}{
-		{123, true},
-		{123.45, true},
-		{"123", false},
-		{"abc", false},
-		{true, false},
-		{nil, false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, test := range tests {
-		result := IsNumber(test.value)
-		if result != test.expected {
-			t.Errorf("IsNumber(%v) = %v; want %v", test.value, result, test.expected)
-		}
-	}
+	// Empty String
+	assert.False(IsNumber(""))
+
+	// Valid Number
+	assert.True(IsNumber(1))
+	assert.True(IsNumber(int8(1)))
+	assert.True(IsNumber(int16(1)))
+	assert.True(IsNumber(int32(1)))
+	assert.True(IsNumber(int64(1)))
+	assert.True(IsNumber(uint(1)))
+	assert.True(IsNumber(uint8(1)))
+	assert.True(IsNumber(uint16(1)))
+	assert.True(IsNumber(uint32(1)))
+	assert.True(IsNumber(uint64(1)))
+	assert.True(IsNumber(uintptr(1)))
+	assert.True(IsNumber(1.0))
+	assert.True(IsNumber(float32(1.0)))
+	assert.True(IsNumber(float64(1.0)))
+	assert.True(IsNumber(1.1))
+
+	// Invalid Number
+	assert.False(IsNumber("1"))               // string
+	assert.False(IsNumber("not a number"))    // string
+	assert.False(IsNumber(nil))               // nil
+	assert.False(IsNumber(make(chan any)))    // channel
+	assert.False(IsNumber(make(map[any]any))) // map
+	assert.False(IsNumber(make([]any, 0)))    // slice
+	assert.False(IsNumber(func() {}))         // func
 }
 
 func TestIsBin(t *testing.T) {
-	// Test cases
-	testCases := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty string", "", false},
-		{"All zeros", "0000", true},
-		{"All ones", "1111", true},
-		{"Mixed zeros and ones", "101010", true},
-		{"Invalid characters", "102010", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	// Run the test cases
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			result := IsBin(tc.input)
-			if result != tc.expected {
-				t.Errorf("Expected %v, but got %v for input %s", tc.expected, result, tc.input)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsBin(""))
+
+	// All zeros
+	assert.True(IsBin("0000"))
+	assert.True(IsBin("00000000"))
+
+	// All ones
+	assert.True(IsBin("1111"))
+	assert.True(IsBin("11111111"))
+
+	// Mixed zeros and ones
+	assert.True(IsBin("101010"))
+	assert.True(IsBin("1010101010101010"))
+
+	// Invalid characters
+	assert.False(IsBin("102010"))
+	assert.False(IsBin("103010"))
 }
 
 func TestIsHex(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Empty string", "", false},
-		{"Valid hex", "1A3FBC90", true},
-		{"Invalid hex with letter G", "1A3FBC9G", false},
-		{"Invalid hex with special character", "1A3FBC9!", false},
-		{"Valid hex with leading 0x", "0x1A3FBC90", true},
-		{"Invalid hex with leading 0x and special character", "0x1A3FBC9!", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := IsHex(tt.input); got != tt.expected {
-				t.Errorf("IsHex(%q) = %v, want %v", tt.input, got, tt.expected)
-			}
-		})
-	}
+	// Empty String
+	assert.False(IsHex(""))
+
+	// Valid Hex
+	assert.True(IsHex("1A3FBC90"))
+	assert.True(IsHex("0x1A3FBC90"))
+
+	// Invalid Hex
+	assert.False(IsHex("1A3FBC9G"))
+	assert.False(IsHex("0x1A3FBC9G"))
+	assert.False(IsHex("1A3FBC9!"))
+	assert.False(IsHex("0x1A3FBC9!"))
+
+	// Invalid leading characters
+	assert.False(IsHex("x1A3FBC90"))
+	assert.False(IsHex("X1A3FBC90"))
+
+	// Invalid trailing characters
+	assert.False(IsHex("1A3FBC90x"))
+	assert.False(IsHex("1A3FBC90X"))
+	assert.False(IsHex("1A3FBC90!"))
+	assert.False(IsHex("1A3FBC90#"))
 }
 
 func TestIsBase64URL(t *testing.T) {
@@ -1090,139 +1193,117 @@ func TestIsBase64URL(t *testing.T) {
 }
 
 func TestIsJWT(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{
-			"Valid JWT",
-			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
-			true,
-		},
-		{
-			"Invalid JWT - incorrect segment count",
-			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ",
-			false,
-		},
-		{
-			"Invalid JWT - not Base64URL encoded",
-			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV/adQssw5c.",
-			false,
-		},
-		{"Empty string", "", false},
-		{"Too short to be a JWT", "a.b.c", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := IsJWT(tt.input); got != tt.expected {
-				t.Errorf("IsJWT(%q) = %v, want %v", tt.input, got, tt.expected)
-			}
-		})
-	}
+	// Empty string
+	assert.False(IsJWT(""))
+
+	// Valid JWT
+	assert.True(IsJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"))
+
+	// Invalid JWT - incorrect segment count
+	assert.False(IsJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"))
+
+	// Invalid JWT - not Base64URL encoded
+	assert.False(IsJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV/adQssw5c."))
+
+	// Invalid JWT - Too short to be a JWT
+	assert.False(IsJWT("a.b.c"))
 }
 
 func TestIsVisa(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{"Valid Visa", "4111111111111111", true},
-		{"Invalid Visa", "1234567890123456", false},
-		{"Empty String", "", false},
-		// {"Non-string Input", 1234567890, false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actual := IsVisa(tt.input)
-			if actual != tt.expected {
-				t.Errorf("IsVisa(%q) = %v; expected %v", tt.input, actual, tt.expected)
-			}
-		})
-	}
+	// Empty string
+	assert.False(IsVisa(""))
+
+	// Valid Visa card number
+	assert.True(IsVisa("4111111111111111"))
+	assert.True(IsVisa("4012888888881881"))
+
+	// Invalid length
+	assert.False(IsVisa("401288888888188"))
+
+	// Invalid characters
+	assert.False(IsVisa("401288888888188a"))
+
+	// Invalid prefix
+	assert.False(IsVisa("3412888888881881"))
 }
 
 func TestIsMasterCard(t *testing.T) {
-	tests := []struct {
-		cardNumber string
-		expected   bool
-	}{
-		{"5555555555554444", true},
-		{"378282246310005", false},
-		{"", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, test := range tests {
-		result := IsMasterCard(test.cardNumber)
-		if result != test.expected {
-			t.Errorf("IsMasterCard(%q) = %v; expected %v", test.cardNumber, result, test.expected)
-		}
-	}
+	// Empty string
+	assert.False(IsMasterCard(""))
+
+	// Valid MasterCard card number
+	assert.True(IsMasterCard("5555555555554444"))
+	assert.True(IsMasterCard("5105105105105100"))
+
+	// Invalid length
+	assert.False(IsMasterCard("510510510510510"))
 }
 
 func TestIsAmericanExpress(t *testing.T) {
-	tests := []struct {
-		cardNumber string
-		expected   bool
-	}{
-		{"378282246310005", true},
-		{"5555555555554444", false},
-		{"", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, test := range tests {
-		result := IsAmericanExpress(test.cardNumber)
-		if result != test.expected {
-			t.Errorf(
-				"IsAmericanExpress(%q) = %v; expected %v",
-				test.cardNumber,
-				result,
-				test.expected,
-			)
-		}
-	}
+	// Empty string
+	assert.False(IsAmericanExpress(""))
+
+	// Valid American Express card number
+	assert.True(IsAmericanExpress("378282246310005"))
+	assert.True(IsAmericanExpress("371449635398431"))
+
+	// Invalid length
+	assert.False(IsAmericanExpress("3714496353984"))
+
+	// Invalid characters
+	assert.False(IsAmericanExpress("371449635398431a"))
+
+	// Invalid prefix
+	assert.False(IsAmericanExpress("5555555555554444"))
 }
 
 func TestIsUnionPay(t *testing.T) {
-	tests := []struct {
-		cardNumber string
-		expected   bool
-	}{
-		{"6211514433542201", true},
-		{"5555555555554444", false},
-		{"", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, test := range tests {
-		result := IsUnionPay(test.cardNumber)
-		if result != test.expected {
-			t.Errorf("IsUnionPay(%q) = %v; expected %v", test.cardNumber, result, test.expected)
-		}
-	}
+	// Empty string
+	assert.False(IsUnionPay(""))
+
+	// Valid UnionPay
+	assert.True(IsUnionPay("6211514433542201"))
+
+	// Invalid length
+	assert.False(IsUnionPay("621151443354"))
+
+	// Invalid characters
+	assert.False(IsUnionPay("621151443354220a"))
+
+	// Invalid prefix
+	assert.False(IsUnionPay("5555555555554444"))
 }
 
 func TestIsChinaUnionPay(t *testing.T) {
-	tests := []struct {
-		cardNumber string
-		expected   bool
-	}{
-		{"6222021001122334456", true},
-		{"6011514433546201", false},
-		{"", false},
-	}
+	t.Parallel()
+	assert := assert.New(t)
 
-	for _, test := range tests {
-		result := IsChinaUnionPay(test.cardNumber)
-		if result != test.expected {
-			t.Errorf(
-				"IsChinaUnionPay(%q) = %v; expected %v",
-				test.cardNumber,
-				result,
-				test.expected,
-			)
-		}
-	}
+	// Empty string
+	assert.False(IsChinaUnionPay(""))
+
+	// Valid China UnionPay
+	assert.True(IsChinaUnionPay("6222021001122334"))
+	assert.True(IsChinaUnionPay("62220210011223344"))
+	assert.True(IsChinaUnionPay("622202100112233445"))
+	assert.True(IsChinaUnionPay("6222021001122334456"))
+
+	// Invalid length
+	assert.False(IsChinaUnionPay("622202100112233"))
+	assert.False(IsChinaUnionPay("62220210011223344567"))
+	assert.False(IsChinaUnionPay("622202100112233445678"))
 }

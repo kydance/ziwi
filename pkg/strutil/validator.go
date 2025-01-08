@@ -71,9 +71,7 @@ var (
 )
 
 // IsAlpha checks if the string contains only letters (a-zA-Z).
-func IsAlpha(str string) bool {
-	return alphaMatcher.MatchString(str)
-}
+func IsAlpha(str string) bool { return alphaMatcher.MatchString(str) }
 
 // IsAllUpper checks if the string is all upper letters (A-Z).
 func IsAllUpper(str string) bool {
@@ -169,19 +167,13 @@ func ContainNumber[T string | []byte](dat T) bool {
 }
 
 // IsJSON checks if the string is a valid JSON string.
-func IsJSON(str string) bool {
-	return json.Unmarshal([]byte(str), &struct{}{}) == nil
-}
+func IsJSON(str string) bool { return json.Unmarshal([]byte(str), &struct{}{}) == nil }
 
 // IsBin check if the string is a valid binary value or not.
-func IsBin(dat string) bool {
-	return binMatcher.MatchString(dat)
-}
+func IsBin(dat string) bool { return binMatcher.MatchString(dat) }
 
 // IsHex check if the string is a valid hexadecimal value or not.
-func IsHex(dat string) bool {
-	return hexMatcher.MatchString(dat)
-}
+func IsHex(dat string) bool { return hexMatcher.MatchString(dat) }
 
 // IsFloatStr check if the string can convert to a float.
 func IsFloatStr(str string) bool {
@@ -199,9 +191,7 @@ func IsFloat(v any) bool {
 }
 
 // IsIntStr check if the string can convert to a integer.
-func IsIntStr(str string) bool {
-	return intStrMatcher.MatchString(str)
-}
+func IsIntStr(str string) bool { return intStrMatcher.MatchString(str) }
 
 // IsInt check if value is a integer (int, int8, int16, int32, int64,
 // uint, uint8, uint16, uint32, uint64, uintptr) or not.
@@ -216,19 +206,14 @@ func IsInt(v any) bool {
 }
 
 // IsNumberStr check if the string can convert to a number.
-func IsNumberStr(str string) bool {
-	return IsIntStr(str) || IsFloatStr(str)
-}
+func IsNumberStr(str string) bool { return IsIntStr(str) || IsFloatStr(str) }
 
 // IsNumber check if value is a number (integer, float) or not.
-func IsNumber(v any) bool {
-	return IsInt(v) || IsFloat(v)
-}
+func IsNumber(v any) bool { return IsInt(v) || IsFloat(v) }
 
 // IsIP check if the string is a valid IP address.
-func IsIP(str string) bool {
-	return net.ParseIP(str) != nil
-}
+// e.g 127.0.0.1, 2001:db8::68, 2001:db8::68:192.168.1.1
+func IsIP(str string) bool { return net.ParseIP(str) != nil }
 
 // IsIPV4 check if the string is a valid IPv4 address.
 func IsIPV4(str string) bool {
@@ -280,14 +265,10 @@ func IsURL(str string) bool {
 }
 
 // IsBase64URL check if the string is a valid RUL-safe Base64 encoded string.
-func IsBase64URL(v string) bool {
-	return base64URLMatcher.MatchString(v)
-}
+func IsBase64URL(v string) bool { return base64URLMatcher.MatchString(v) }
 
 // IsDNS check if the string is a valid DNS name.
-func IsDNS(str string) bool {
-	return dnsMatcher.MatchString(str)
-}
+func IsDNS(str string) bool { return dnsMatcher.MatchString(str) }
 
 // IsEmail check if the string is a valid email address.
 func IsEmail(str string) bool {
@@ -299,9 +280,7 @@ func IsEmail(str string) bool {
 }
 
 // IsChineseMobile check if the string is a valid Chinese mobile phone number.
-func IsChineseMobile(str string) bool {
-	return chineseMobileMatcher.MatchString(str)
-}
+func IsChineseMobile(str string) bool { return chineseMobileMatcher.MatchString(str) }
 
 // IsChineseIDNum check if the string is a valid Chinese ID card number.
 func IsChineseIDNum(id string) bool {
@@ -379,36 +358,23 @@ func IsChineseIDNum(id string) bool {
 }
 
 // ContainChinese check if the string contains Chinese characters.
-func ContainChinese(str string) bool {
-	return chineseMatcher.MatchString(str)
-}
+func ContainChinese(str string) bool { return chineseMatcher.MatchString(str) }
 
 // IsChinesePhone check if the string is chinese phone number.
 // Valid chinese phone is xxx-xxxxxxxx or xxxx-xxxxxxx.
-func IsChinesePhone(phone string) bool {
-	return chinesePhoneMatcher.MatchString(phone)
-}
+func IsChinesePhone(phone string) bool { return chinesePhoneMatcher.MatchString(phone) }
 
 // IsCreditCard check if the string is credit card.
-func IsCreditCard(creditCart string) bool {
-	return creditCardMatcher.MatchString(creditCart)
-}
+func IsCreditCard(creditCart string) bool { return creditCardMatcher.MatchString(creditCart) }
 
 // IsBase64 check if the string is base64 string.
-func IsBase64(base64 string) bool {
-	return base64Matcher.MatchString(base64)
-}
+func IsBase64(base64 string) bool { return base64Matcher.MatchString(base64) }
 
 // IsEmptyString check if the string is empty.
-func IsEmptyString(str string) bool {
-	return len(str) == 0
-}
+func IsEmptyString(str string) bool { return len(str) == 0 }
 
 // IsRegexMatch check if the string match the regexp.
-func IsRegexMatch(str, regex string) bool {
-	reg := regexp.MustCompile(regex)
-	return reg.MatchString(str)
-}
+func IsRegexMatch(str, regex string) bool { return regexp.MustCompile(regex).MatchString(str) }
 
 // IsStrongPassword check if the string is strong password,
 // if len(password) is less than the length param, return false.
@@ -549,26 +515,16 @@ func IsGBK(data []byte) bool {
 }
 
 // IsVisa check if a string is a valid Visa card number.
-func IsVisa(str string) bool {
-	return visaMatcher.MatchString(str)
-}
+func IsVisa(str string) bool { return visaMatcher.MatchString(str) }
 
 // IsMasterCard check if a give string is a valid master card nubmer or not.
-func IsMasterCard(v string) bool {
-	return masterCardMatcher.MatchString(v)
-}
+func IsMasterCard(v string) bool { return masterCardMatcher.MatchString(v) }
 
 // IsAmericanExpress check if a give string is a valid american expression card nubmer or not.
-func IsAmericanExpress(v string) bool {
-	return americanExpressMatcher.MatchString(v)
-}
+func IsAmericanExpress(v string) bool { return americanExpressMatcher.MatchString(v) }
 
 // IsUnionPay check if a give string is a valid union pay nubmer or not.
-func IsUnionPay(v string) bool {
-	return unionPay.MatchString(v)
-}
+func IsUnionPay(v string) bool { return unionPay.MatchString(v) }
 
 // IsChinaUnionPay check if a give string is a valid china union pay nubmer or not.
-func IsChinaUnionPay(v string) bool {
-	return chinaUnionPay.MatchString(v)
-}
+func IsChinaUnionPay(v string) bool { return chinaUnionPay.MatchString(v) }

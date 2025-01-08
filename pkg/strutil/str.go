@@ -48,17 +48,22 @@ func CamelCase(str string) string {
 //		"hello" -> "Hello"
 //		"GoLang" -> "Golang"
 func Capitalize(str string) string {
-	rs := make([]rune, 0, len(str))
-	for idx, val := range str {
-		if idx == 0 {
-			rs = append(rs, unicode.ToUpper(val))
-			continue
-		}
-
-		rs = append(rs, unicode.ToLower(val))
+	if str == "" {
+		return ""
 	}
 
-	return string(rs)
+	var sbr strings.Builder
+	sbr.Grow(len(str))
+
+	for idx, val := range str {
+		if idx == 0 {
+			sbr.WriteRune(unicode.ToUpper(val))
+		} else {
+			sbr.WriteRune(unicode.ToLower(val))
+		}
+	}
+
+	return sbr.String()
 }
 
 // UpperFirst converts first character of string to upper case.
@@ -66,11 +71,14 @@ func Capitalize(str string) string {
 //	Example:
 //		"hello" -> "Hello"
 func UpperFirst(str string) string {
-	if len(str) == 0 {
+	if str == "" {
 		return ""
 	}
 
 	r, size := utf8.DecodeRuneInString(str)
+	if r == utf8.RuneError {
+		return str
+	}
 	return string(unicode.ToUpper(r)) + str[size:]
 }
 
@@ -79,38 +87,32 @@ func UpperFirst(str string) string {
 //	Example:
 //		"HELLO WORLD" -> "hELLO WORLD"
 func LowerFirst(str string) string {
-	if len(str) == 0 {
+	if str == "" {
 		return ""
 	}
 
 	r, size := utf8.DecodeRuneInString(str)
+	if r == utf8.RuneError {
+		return str
+	}
 	return string(unicode.ToLower(r)) + str[size:]
 }
 
 // Pad pads the src to the left side and the right side with pad string until the src is size long.
-func Pad(src string, size int, pad string) string {
-	return padAtPos(src, size, pad, 0)
-}
+func Pad(src string, size int, pad string) string { return padAtPos(src, size, pad, PosBoth) }
 
 // PadLeft pads the src to the left side with pad string until the src is size long.
-func PadLeft(src string, size int, pad string) string {
-	return padAtPos(src, size, pad, 1)
-}
+func PadLeft(src string, size int, pad string) string { return padAtPos(src, size, pad, PosLeft) }
 
 // PadRight pads the src to the right side with pad string until the src is size long.
-func PadRight(src string, size int, pad string) string {
-	return padAtPos(src, size, pad, 2)
-}
+func PadRight(src string, size int, pad string) string { return padAtPos(src, size, pad, PosRight) }
 
 // KebabCase converts string to kebab-case string, non letters and numbers will be ignored.
 //
 //	Example:
 //		"hello_world" -> "hello-world"
 //		"&FOO:BAR$BAZ" -> "foo-bar-baz"
-func KebabCase(str string) string {
-	vs := splitIntoStrings(str, false)
-	return strings.Join(vs, "-")
-}
+func KebabCase(str string) string { return strings.Join(splitIntoStrings(str, false), "-") }
 
 // UpperKebabCase converts string to upper KEBAB-CASE string,
 // non letters and numbers will be ignored.
@@ -118,19 +120,14 @@ func KebabCase(str string) string {
 //	Example:
 //		"Hello World" -> "HELLO-WORLD"
 //		"!@#" -> ""
-func UpperKebabCase(str string) string {
-	return strings.ToUpper(KebabCase(str))
-}
+func UpperKebabCase(str string) string { return strings.ToUpper(KebabCase(str)) }
 
 // SnakeCase converts string to snake_case string, non letters and numbers will be ignored.
 //
 //	Example:
 //		"hello_world" -> "hello_world"
 //		"&FOO:BAR$BAZ" -> "foo_bar_baz"
-func SnakeCase(str string) string {
-	vs := splitIntoStrings(str, false)
-	return strings.Join(vs, "_")
-}
+func SnakeCase(str string) string { return strings.Join(splitIntoStrings(str, false), "_") }
 
 // UpperSnakeCase converts string to upper SNAKE_CASE string,
 // non letters and numbers will be ignored.
@@ -138,9 +135,7 @@ func SnakeCase(str string) string {
 //	Example:
 //		"Hello World" -> "HELLO_WORLD"
 //		"!" -> ""
-func UpperSnakeCase(str string) string {
-	return strings.ToUpper(SnakeCase(str))
-}
+func UpperSnakeCase(str string) string { return strings.ToUpper(SnakeCase(str)) }
 
 // Before returns the string before the first occurrence of ch.
 //
@@ -215,13 +210,15 @@ func IsString(val any) bool {
 
 // Reverse reverses the string.
 func Reverse(str string) string {
-	vr := []rune(str)
-
-	for i, j := 0, len(vr)-1; i < len(vr)/2; i, j = i+1, j-1 {
-		vr[i], vr[j] = vr[j], vr[i]
+	if len(str) <= 1 {
+		return str
 	}
 
-	return string(vr)
+	runes := []rune(str)
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+	return string(runes)
 }
 
 // Warp wraps the string with the given string.
@@ -292,14 +289,10 @@ func RemoveNonPrintable(str string) string {
 }
 
 // StringToBytes converts the string to byte slice without memory alloc.
-func StringToBytes(str string) []byte {
-	return *(*[]byte)(unsafe.Pointer(&str))
-}
+func StringToBytes(str string) []byte { return *(*[]byte)(unsafe.Pointer(&str)) }
 
 // BytesToString converts the byte slice to string without memory alloc.
-func BytesToString(bs []byte) string {
-	return *(*string)(unsafe.Pointer(&bs))
-}
+func BytesToString(bs []byte) string { return *(*string)(unsafe.Pointer(&bs)) }
 
 // IsSpace checks if the string is whitespace, empty or not.
 //
@@ -321,9 +314,7 @@ func IsSpace(str string) bool {
 }
 
 // IsNotSpace checks if the string is not whitespace, empty or not.
-func IsNotSpace(str string) bool {
-	return !IsSpace(str)
-}
+func IsNotSpace(str string) bool { return !IsSpace(str) }
 
 // HasPrefixAny checks if the string has any of the given prefixes.
 func HasPrefixAny(str string, prefixs ...string) bool {
@@ -378,7 +369,6 @@ func ReplaceWithMap(str string, replaceMap map[string]string) string {
 //
 //	Example:
 //		Trim("abcHello World!cba", "abc!dEF") -> "Hello Worl"
-
 func Trim(str string, cutset ...string) string {
 	// DefaultTrimChars are the characters which are stripped by Trim* functions in default.
 	DefaultTrimChars := string([]byte{
@@ -441,8 +431,15 @@ func HideString(src string, beg, end int, hideChar string) string {
 
 // ContainsAll checks if the string contains all substrings.
 func ContainsAll(src string, substrs []string) bool {
-	for _, substr := range substrs {
-		if !strings.Contains(src, substr) {
+	if len(substrs) == 0 {
+		return true
+	}
+	if src == "" {
+		return false
+	}
+
+	for _, sub := range substrs {
+		if !strings.Contains(src, sub) {
 			return false
 		}
 	}
@@ -451,8 +448,12 @@ func ContainsAll(src string, substrs []string) bool {
 
 // ContainsAny checks if the string contains any substring.
 func ContainsAny(src string, substrs []string) bool {
-	for _, substr := range substrs {
-		if strings.Contains(src, substr) {
+	if src == "" || len(substrs) == 0 {
+		return false
+	}
+
+	for _, sub := range substrs {
+		if strings.Contains(src, sub) {
 			return true
 		}
 	}
@@ -466,16 +467,34 @@ func ContainsAny(src string, substrs []string) bool {
 //		RemoveWhiteSpace("  hello   world  ", false) -> "hello world"
 //		RemoveWitheSpace("  hello   world  ", true) -> "helloworld"
 func RemoveWhiteSpace(str string, rmAll bool) string {
-	if rmAll && str != "" {
-		return strings.Join(strings.Fields(str), "")
-	} else if str != "" {
-		whitespaceRegexMatcher := regexp.MustCompile(`\s`)
-		mutiWhitespaceRegexMatcher := regexp.MustCompile(`[[:space:]]{2,}|[\s\p{Zs}]{2,}`)
-
-		str = whitespaceRegexMatcher.ReplaceAllString(
-			mutiWhitespaceRegexMatcher.ReplaceAllString(str, " "), " ")
+	if str == "" {
+		return ""
 	}
-	return strings.TrimSpace(str)
+
+	var sbr strings.Builder
+	sbr.Grow(len(str))
+
+	var lastIsSpace bool
+	for _, ch := range str {
+		isSpace := unicode.IsSpace(ch)
+		if rmAll {
+			if !isSpace {
+				sbr.WriteRune(ch)
+			}
+		} else {
+			if isSpace {
+				if !lastIsSpace {
+					sbr.WriteRune(' ')
+				}
+			} else {
+				sbr.WriteRune(ch)
+			}
+			lastIsSpace = isSpace
+		}
+	}
+
+	result := sbr.String()
+	return strings.TrimSpace(result)
 }
 
 // SubInBetween returns the substring between the beg and end.
@@ -549,18 +568,26 @@ func Concat(length int, str ...string) string {
 	if len(str) == 0 {
 		return ""
 	}
+	if len(str) == 1 {
+		return str[0]
+	}
 
-	sb := strings.Builder{}
-	if length <= 0 {
-		sb.Grow(len(str[0]) * len(str))
+	var sbr strings.Builder
+	if length > 0 {
+		sbr.Grow(length)
 	} else {
-		sb.Grow(length)
+		// 预估总长度
+		totalLen := 0
+		for _, s := range str {
+			totalLen += len(s)
+		}
+		sbr.Grow(totalLen)
 	}
 
 	for _, s := range str {
-		sb.WriteString(s)
+		sbr.WriteString(s)
 	}
-	return sb.String()
+	return sbr.String()
 }
 
 // RegexMatchAll returns all matches of the pattern in the string.
@@ -594,4 +621,42 @@ func In(dst string, src []string) bool {
 	}
 	_, ok := m[dst]
 	return ok
+}
+
+// StrEscape escapes special characters in a string.
+// The following characters are escaped:
+// \r -> \\r
+// \n -> \\n
+// \  -> \\
+// '  -> \'
+// "  -> \"
+// \032 -> \Z (Ctrl+Z)
+func StrEscape(source string) string {
+	if source == "" {
+		return ""
+	}
+
+	// Pre-allocate double space for worst case (all chars need escaping)
+	dest := make([]byte, 0, len(source)*2)
+
+	// Map of characters that need escaping
+	escapeChars := map[byte]byte{
+		'\r':   'r',
+		'\n':   'n',
+		'\\':   '\\',
+		'\'':   '\'',
+		'"':    '"',
+		'\032': 'Z',
+	}
+
+	// Process each byte in the source string
+	for i := 0; i < len(source); i++ {
+		if escapeChar, needEscape := escapeChars[source[i]]; needEscape {
+			dest = append(dest, '\\', escapeChar)
+		} else {
+			dest = append(dest, source[i])
+		}
+	}
+
+	return string(dest)
 }

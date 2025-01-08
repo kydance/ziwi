@@ -11,7 +11,16 @@
 package strutil
 
 import (
+	"strings"
 	"unicode"
+)
+
+type Pos int
+
+const (
+	PosBoth Pos = iota
+	PosLeft
+	PosRight
 )
 
 // splitIntoStrings splits string into string slices based on type of unicode character.
@@ -20,7 +29,8 @@ import (
 //		"GoLangProgramming" -> {"go", "lang", "programming"}
 //		"12345!@#$%" -> {"12345"},
 func splitIntoStrings(str string, upper bool) []string {
-	var runes [][]rune
+	// 预估切片容量为字符串长度的1/3，因为大多数情况下会分割成多个单词
+	runes := make([][]rune, 0, len(str)/3)
 	lastCharType, charType := 0, 0
 
 	// split string into runes based on type of unicode character
@@ -55,7 +65,7 @@ func splitIntoStrings(str string, upper bool) []string {
 	}
 
 	// filter all none letters and non digits
-	var result []string
+	result := make([]string, 0, len(runes))
 	for _, rs := range runes {
 		if len(rs) > 0 && (unicode.IsLetter(rs[0]) || unicode.IsDigit(rs[0])) {
 			if upper {
@@ -70,46 +80,10 @@ func splitIntoStrings(str string, upper bool) []string {
 }
 
 // toUpperAll converts all runes to upper case.
-func toUpperAll(rs []rune) []rune {
-	for idx := range rs {
-		rs[idx] = unicode.ToUpper(rs[idx])
-	}
-	return rs
-}
+func toUpperAll(rs []rune) []rune { return []rune(strings.ToUpper(string(rs))) }
 
 // toLowerAll converts all runes to lower case.
-func toLowerAll(rs []rune) []rune {
-	for idx := range rs {
-		rs[idx] = unicode.ToLower(rs[idx])
-	}
-	return rs
-}
-
-// equalStringSlices checks if two string slices are equal.
-func equalStringSlices(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i, v := range a {
-		if v != b[i] {
-			return false
-		}
-	}
-	return true
-}
-
-// equalRuneSlices checks if two rune slices are equal.
-func equalRuneSlices(a, b []rune) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i, v := range a {
-		if v != b[i] {
-			return false
-		}
-	}
-	return true
-}
+func toLowerAll(rs []rune) []rune { return []rune(strings.ToLower(string(rs))) }
 
 // padAtPos pads string at given position.
 // pos: 0 - both, 1 - left, 2 - right
@@ -117,7 +91,7 @@ func equalRuneSlices(a, b []rune) bool {
 //	Example:
 //		padAtPos("hello", 6, "*", 0) -> "hello*"
 //		padAtPos("hello", 10, "abc", 0) -> "abhelloabc"
-func padAtPos(str string, size int, pad string, pos int) string {
+func padAtPos(str string, size int, pad string, pos Pos) string {
 	if len(str) >= size {
 		return str
 	}
@@ -137,21 +111,22 @@ func padAtPos(str string, size int, pad string, pos int) string {
 	}
 	rightPadSize := size - leftPadSize
 
+	// Using strings.Builder to optimize string concatenation
+	var builder strings.Builder
+	builder.Grow(size + len(str))
+
 	// Pad left
-	leftPad := ""
-	curr := 0
-	for curr < leftPadSize {
-		leftPad += string(pad[curr%padSize])
-		curr++
+	for i := 0; i < leftPadSize; i++ {
+		builder.WriteByte(pad[i%padSize])
 	}
+
+	// Write original string
+	builder.WriteString(str)
 
 	// Pad right
-	rightPad := ""
-	curr = 0
-	for curr < rightPadSize {
-		rightPad += string(pad[curr%padSize])
-		curr++
+	for i := 0; i < rightPadSize; i++ {
+		builder.WriteByte(pad[i%padSize])
 	}
 
-	return leftPad + str + rightPad
+	return builder.String()
 }
