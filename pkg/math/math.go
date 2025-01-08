@@ -11,41 +11,71 @@
 package math
 
 import (
-	"fmt"
 	"math"
 	"strconv"
-	"strings"
 
 	"golang.org/x/exp/constraints"
 )
 
-// Exponent calculates x^n
-func Exponent(x, n int64) int64 {
-	if n == 0 {
+// Exponent calculates base^exp. Returns 0 for negative exponents.
+// For positive exponents, it uses the binary exponentiation algorithm.
+func Exponent[T ~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64](base, exp T) T {
+	// Handle special cases
+	switch {
+	case exp < 0:
+		return 0
+	case exp == 0:
+		return 1
+	case exp == 1:
+		return base
+	case base == 0:
+		return 0
+	case base == 1:
 		return 1
 	}
 
-	t := Exponent(x, n/2)
-	if n%2 == 1 {
-		return t * t * x
+	result := T(1)
+	for exp > 0 {
+		if exp%2 == 1 {
+			result *= base
+		}
+		base *= base
+		exp /= 2
 	}
-	return t * t
+	return result
 }
 
 // Factorial calculates `x!`
-func Factorial(x uint) uint {
-	var f uint = 1
-	for ; x > 1; x-- {
-		f *= x
+func Factorial[T ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64](x T) T {
+	if x == 0 {
+		return 1
 	}
-	return f
+
+	ret := x
+	for x--; x > 1; x-- {
+		ret *= x
+	}
+	return ret
 }
 
 // RoundToFloat rounds a number to the specified number of decimal places.
+//
+// Parameters:
+//
+//	x: The number to be rounded.
+//	n: The number of decimal places to round to.
+//
+// Returns:
+//
+//	A float64 representation of the rounded number.
+//
+// Example:
+//
+//	RoundToFloat(3.14159, 2) -> Output: 3.14
 func RoundToFloat[T constraints.Float | constraints.Integer](x T, n int) float64 {
-	tmp := math.Pow(10.0, float64(n))
-	x *= T(tmp)
-	return math.Round(float64(x)) / tmp
+	temp := math.Pow(10.0, float64(n))
+	x *= T(temp)
+	return math.Round(float64(x)) / temp
 }
 
 // RoundToString rounds a numeric value to a specified number of decimal places and
@@ -62,90 +92,114 @@ func RoundToFloat[T constraints.Float | constraints.Integer](x T, n int) float64
 func RoundToString[T constraints.Float | constraints.Integer](x T, n int) string {
 	// Calculate the power of 10 to multiply the input value by, to shift the decimal point.
 	temp := math.Pow(10.0, float64(n))
-
-	// Multiply the input value by the calculated power of 10.
 	x *= T(temp)
-
-	// Round the multiplied value to the nearest integer.
-	r := math.Round(float64(x))
-
 	// Format the rounded value back to a string with the specified number of decimal places.
-	return strconv.FormatFloat(r/temp, 'f', n, 64)
+	return strconv.FormatFloat(math.Round(float64(x))/temp, 'f', n, 64)
 }
 
 // Percent calculates the percentage of value to total.
-func Percent(val, total float64, n int) float64 {
-	if total == 0 {
-		return float64(0)
-	}
-
-	tmp := val / total * 100
-	return RoundToFloat(tmp, n)
-}
-
-// TruncRound rounds a floating-point number to a specified number of decimal places.
-// It uses string manipulation to achieve the rounding and then converts the result
-// to the original type.
 //
 // Parameters:
-//
-//	x: The number to be rounded.
-//	n: The number of decimal places to round to.
+//   - val: The value to calculate the percentage of. Can be negative.
+//   - total: The total value to calculate the percentage against. Can be negative.
+//   - n: The number of decimal places to round to. Must be non-negative.
 //
 // Returns:
+//   - A float64 representation of the percentage value.
+//   - Returns 0 if total is 0 to prevent division by zero.
+//   - For negative values, the sign of the result follows mathematical rules:
+//     (-val/total) and (val/-total) will return negative percentage.
 //
-//	T: The rounded number of the same type as the input.
-func TruncRound[T constraints.Float | constraints.Integer](x T, n int) T {
-	// Convert the number to a string with n+1 decimal places to handle rounding
-	floatStr := fmt.Sprintf("%."+strconv.Itoa(n+1)+"f", float64(x))
-	// Split the string into integer and fractional parts
-	temp := strings.Split(floatStr, ".")
-
-	var newFloat string
-	// If there is no fractional part or the number of decimal places is
-	// greater than or equal to the length of the fractional part,
-	// use the original string representation
-	if len(temp) < 2 || n >= len(temp[1]) {
-		newFloat = floatStr
-	} else {
-		// Otherwise, truncate the fractional part to n decimal places
-		newFloat = temp[0] + "." + temp[1][:n]
+// Examples:
+//
+//	Percent(25, 100, 2) returns 25.00
+//	Percent(-25, 100, 2) returns -25.00
+//	Percent(1, 3, 2) returns 33.33
+func Percent[T constraints.Float | constraints.Integer](val, total T, n int) float64 {
+	if total == 0 {
+		return 0
 	}
 
-	// Parse the new string representation back to a float64
-	result, _ := strconv.ParseFloat(newFloat, 64)
-	// Convert the result back to the original type and return it
-	return T(result)
+	if n < 0 {
+		n = 0
+	}
+
+	return RoundToFloat((float64(val)/float64(total))*100, n)
+}
+
+// TruncRound rounds a floating-point number to a specified number of decimal places
+// by truncating any additional decimal places.
+//
+// Parameters:
+//   - x: The number to round (can be float or integer)
+//   - n: The number of decimal places to keep (must be non-negative)
+//
+// Returns:
+//   - The rounded number of the same type as the input
+//
+// Examples:
+//
+//	TruncRound(3.14159, 2) returns 3.14
+//	TruncRound(3.14159, 0) returns 3.0
+//	TruncRound(-3.14159, 1) returns -3.1
+func TruncRound[T constraints.Float | constraints.Integer](x T, n int) T {
+	if n < 0 {
+		n = 0
+	}
+
+	// Convert to float64 for calculation
+	f := float64(x)
+
+	// Calculate the multiplier (10^n)
+	multiplier := math.Pow10(n)
+
+	// Shift decimal point right, truncate decimal part, then shift back
+	return T(math.Trunc(f*multiplier) / multiplier)
 }
 
 // FloorToFloat round down to n decimal places.
+//
+// Parameters:
+//   - x: The number to round (can be float or integer)
+//   - n: The number of decimal places to keep (must be non-negative)
+//
+// Returns:
+//   - The rounded number of the same type as the input
 func FloorToFloat[T constraints.Float | constraints.Integer](x T, n int) float64 {
-	temp := math.Pow(10.0, float64(n))
-	x *= T(temp)
-	return math.Floor(float64(x)) / temp
+	if n < 0 {
+		n = 0
+	}
+
+	multiplier := math.Pow10(n)
+	return math.Floor(float64(x)*multiplier) / multiplier
 }
 
 // FloorToStr round down to n decimal places.
 func FloorToStr[T constraints.Float | constraints.Integer](x T, n int) string {
-	temp := math.Pow(10.0, float64(n))
-	x *= T(temp)
-	r := math.Floor(float64(x))
-	return strconv.FormatFloat(r/temp, 'f', n, 64)
+	if n < 0 {
+		n = 0
+	}
+
+	return strconv.FormatFloat(FloorToFloat(x, n), 'f', n, 64)
 }
 
 // CeilToFloat round up to n decimal places.
 func CeilToFloat[T constraints.Float | constraints.Integer](x T, n int) float64 {
-	temp := math.Pow(10.0, float64(n))
-	x *= T(temp)
-	return math.Ceil(float64(x)) / temp
+	if n < 0 {
+		n = 0
+	}
+
+	multiplier := math.Pow10(n)
+	return math.Ceil(float64(x)*multiplier) / multiplier
 }
 
 // CeilToStr round up to n decimal places.
 func CeilToStr[T constraints.Float | constraints.Integer](x T, n int) string {
-	temp := math.Pow(10.0, float64(n))
-	x *= T(temp)
-	r := math.Ceil(float64(x))
-	return strconv.FormatFloat(r/temp, 'f', n, 64)
+	if n < 0 {
+		n = 0
+	}
+
+	return strconv.FormatFloat(CeilToFloat(x, n), 'f', n, 64)
 }
 
 // Sum returns sum of all passed values.
@@ -159,6 +213,10 @@ func Sum[T constraints.Float | constraints.Integer](vs ...T) T {
 
 // Average returns the average of all passed values.
 func Average[T constraints.Float | constraints.Integer](vs ...T) T {
+	if len(vs) == 0 {
+		return 0
+	}
+
 	return Sum(vs...) / T(len(vs))
 }
 
@@ -193,14 +251,10 @@ func RangeWithStep[T constraints.Integer | constraints.Float](start, end, step T
 }
 
 // AngleToRadian converts angle value to radian value.
-func AngleToRadian(angle float64) float64 {
-	return angle * (math.Pi / 180)
-}
+func AngleToRadian(angle float64) float64 { return angle * (math.Pi / 180) }
 
 // RadianToAngle converts radian value to angle value.
-func RadianToAngle(radian float64) float64 {
-	return radian * (180 / math.Pi)
-}
+func RadianToAngle(radian float64) float64 { return radian * (180 / math.Pi) }
 
 // IsPrime checks if value is primer number.
 func IsPrime(val int) bool {
