@@ -357,10 +357,9 @@ func TestTimes(t *testing.T) {
 	as.Equal([]Point{{X: 0, Y: 0}, {X: 1, Y: 2}}, points)
 
 	// Test with zero count
-	empty := Times(0, func(idx int) int {
+	as.Empty(Times(0, func(idx int) int {
 		return idx
-	})
-	as.Empty(empty)
+	}))
 
 	// Test with negative count
 	negative := Times(-1, func(idx int) int {
@@ -1339,6 +1338,44 @@ func TestCount(t *testing.T) {
 	as.Equal(2, wordCount)
 }
 
+func TestContains(t *testing.T) {
+	t.Parallel()
+	as := assert.New(t)
+
+	// Test basic containing
+	nums := []int{1, 2, 3, 4, 5}
+	contains := Contains(nums, 2)
+	as.True(contains)
+
+	// Test with alphabet
+	alphas := []string{"a", "b", "c", "d", "e"}
+	containsAlpha := Contains(alphas, "c")
+	as.True(containsAlpha)
+
+	// Test with strings
+	words := []string{"apple", "banana", "apple", "cherry"}
+	wordCheck := Contains(words, "apple")
+	as.True(wordCheck)
+
+	// Test with custom slice type
+	type IntSlice []int
+	customSlice := IntSlice{1, 2, 3}
+	customCheck := Contains(customSlice, 2)
+	as.True(customCheck)
+
+	// Test with no match
+	missing := Contains(nums, 6)
+	as.False(missing)
+
+	// Test with strings
+	missingWord := Contains(words, "grape")
+	as.False(missingWord)
+
+	// Test with empty slice
+	emptyCheck := Contains([]int{}, 1)
+	as.False(emptyCheck)
+}
+
 func TestCountBy(t *testing.T) {
 	t.Parallel()
 	as := assert.New(t)
@@ -1367,6 +1404,36 @@ func TestCountBy(t *testing.T) {
 		return n%2 == 0 && n > 3
 	})
 	as.Equal(2, complexCount)
+}
+
+func TestContainsBy(t *testing.T) {
+	t.Parallel()
+	as := assert.New(t)
+
+	// Test basic containing by predicate
+	nums := []int{1, 2, 3, 4, 5, 6}
+	evenCheck := ContainsBy(nums, func(n int) bool {
+		return n%2 == 0
+	})
+	as.True(evenCheck)
+
+	// Test with no matches
+	noMatches := ContainsBy(nums, func(n int) bool {
+		return n > 10
+	})
+	as.False(noMatches)
+
+	// Test with empty slice
+	emptyCheck := ContainsBy([]int{}, func(n int) bool {
+		return true
+	})
+	as.False(emptyCheck)
+
+	// Test with complex predicate
+	complexCheck := ContainsBy(nums, func(n int) bool {
+		return n%2 == 0 && n > 3
+	})
+	as.True(complexCheck)
 }
 
 func TestCountValues(t *testing.T) {
@@ -1606,25 +1673,25 @@ func TestCompact(t *testing.T) {
 
 	// Test with integers
 	ints := []int{0, 1, 0, 2, 3, 0, 4, 0, 5}
-	compactInts := Compact(ints)
+	compactInts := RmZero(ints)
 	as.Equal([]int{1, 2, 3, 4, 5}, compactInts)
 
 	// Test with empty slice
 	emptyInts := []int{}
-	as.Empty(Compact(emptyInts))
+	as.Empty(RmZero(emptyInts))
 
 	// Test with all zeros
 	allZeros := []int{0, 0, 0, 0}
-	as.Empty(Compact(allZeros))
+	as.Empty(RmZero(allZeros))
 
 	// Test with strings
 	strs := []string{"", "hello", "", "world", "", ""}
-	as.Equal([]string{"hello", "world"}, Compact(strs))
+	as.Equal([]string{"hello", "world"}, RmZero(strs))
 
 	// Test with custom type
 	type customInt int
 	customs := []customInt{0, 1, 0, 2, 0}
-	as.Equal([]customInt{1, 2}, Compact(customs))
+	as.Equal([]customInt{1, 2}, RmZero(customs))
 }
 
 func TestIsSorted(t *testing.T) {
@@ -1801,4 +1868,174 @@ func TestEqual(t *testing.T) {
 	floats3 := []float64{1.1, 2.2, 3.4}
 	as.True(Equal(floats1, floats2))
 	as.False(Equal(floats1, floats3))
+}
+
+func TestContainsSubSlice(t *testing.T) {
+	t.Parallel()
+	as := assert.New(t)
+
+	// Test with empty slices
+	as.True(ContainsSubSlice([]int{1, 2, 3}, []int{}), "empty subslice should be contained in any slice")
+	as.False(ContainsSubSlice([]int{}, []int{1}), "non-empty subslice should not be contained in empty slice")
+	as.True(ContainsSubSlice([]int{}, []int{}), "empty subslice should be contained in empty slice")
+
+	// Test with single element
+	as.True(ContainsSubSlice([]int{1, 2, 3}, []int{2}), "single element should be found")
+	as.False(ContainsSubSlice([]int{1, 2, 3}, []int{4}), "single element should not be found")
+
+	// Test with continuous subsequences
+	slice := []int{1, 2, 3, 4, 5}
+	as.True(ContainsSubSlice(slice, []int{1, 2}), "prefix subsequence")
+	as.True(ContainsSubSlice(slice, []int{4, 5}), "suffix subsequence")
+	as.True(ContainsSubSlice(slice, []int{2, 3, 4}), "middle subsequence")
+	as.True(ContainsSubSlice(slice, []int{1, 2, 3, 4, 5}), "full sequence")
+
+	// Test with non-continuous elements
+	as.False(ContainsSubSlice(slice, []int{2, 4}), "non-continuous elements should not match")
+	as.False(ContainsSubSlice(slice, []int{1, 3}), "non-continuous elements should not match")
+
+	// Test with longer subslice
+	as.False(ContainsSubSlice(slice, []int{1, 2, 3, 4, 5, 6}), "longer subslice should not be contained")
+
+	// Test with strings
+	strSlice := []string{"hello", "world", "go", "lang"}
+	as.True(ContainsSubSlice(strSlice, []string{"world", "go"}), "string subsequence should be found")
+	as.False(ContainsSubSlice(strSlice, []string{"hello", "lang"}), "non-continuous string subsequence should not be found")
+
+	// Test with custom types
+	type customInt int
+	customs := []customInt{1, 2, 3, 4, 5}
+	as.True(ContainsSubSlice(customs, []customInt{2, 3}), "custom type subsequence should be found")
+	as.False(ContainsSubSlice(customs, []customInt{2, 4}), "non-continuous custom type subsequence should not be found")
+
+	// Test with repeated elements
+	repeatedSlice := []int{1, 2, 2, 3, 2, 2, 4}
+	as.True(ContainsSubSlice(repeatedSlice, []int{2, 2}), "repeated elements subsequence should be found")
+	as.True(ContainsSubSlice(repeatedSlice, []int{2, 2, 4}), "repeated elements at end should be found")
+	as.False(ContainsSubSlice(repeatedSlice, []int{2, 2, 2, 2}), "too many repeated elements should not be found")
+
+	// Test with negative numbers
+	negativeSlice := []int{-3, -2, -1, 0, 1}
+	as.True(ContainsSubSlice(negativeSlice, []int{-2, -1}), "negative numbers subsequence should be found")
+	as.False(ContainsSubSlice(negativeSlice, []int{-3, -1}), "non-continuous negative numbers should not be found")
+}
+
+func TestDifference(t *testing.T) {
+	t.Parallel()
+	as := assert.New(t)
+
+	// Test empty slices
+	as.Empty(Difference([]int{}, []int{}), "empty slices should return empty")
+	as.Empty(Difference([]int{}, []int{1, 2, 3}), "empty first slice should return empty")
+	as.Equal([]int{1, 2, 3}, Difference([]int{1, 2, 3}, []int{}), "empty second slice should return first slice")
+
+	// Test small slices (< 10 elements)
+	slice1 := []int{1, 2, 3, 4, 5}
+	slice2 := []int{1, 2, 4}
+	as.Equal([]int{3, 5}, Difference(slice1, slice2), "should find correct difference")
+
+	// Test with no differences
+	as.Empty(Difference([]int{1, 2, 3}, []int{1, 2, 3}), "identical slices should return empty")
+
+	// Test with all different elements
+	as.Equal([]int{1, 2, 3}, Difference([]int{1, 2, 3}, []int{4, 5, 6}), "completely different slices should return first slice")
+
+	// Test with strings
+	strSlice1 := []string{"a", "b", "c", "d"}
+	strSlice2 := []string{"b", "d"}
+	as.Equal([]string{"a", "c"}, Difference(strSlice1, strSlice2), "should work with strings")
+
+	// Test with custom types
+	type customInt int
+	customs1 := []customInt{1, 2, 3, 4}
+	customs2 := []customInt{2, 4}
+	as.Equal([]customInt{1, 3}, Difference(customs1, customs2), "should work with custom types")
+
+	// Test with duplicates in first slice
+	as.Equal([]int{3, 3, 5}, Difference([]int{1, 2, 3, 3, 5}, []int{1, 2}), "should preserve duplicates from first slice")
+
+	// Test with duplicates in second slice
+	as.Equal([]int{3}, Difference([]int{1, 2, 3}, []int{1, 2, 2}), "duplicates in second slice shouldn't affect result")
+
+	// Test large slices (>= 10 elements)
+	large1 := make([]int, 20)
+	large2 := make([]int, 15)
+	for i := range large1 {
+		large1[i] = i
+	}
+	for i := range large2 {
+		large2[i] = i * 2
+	}
+	expected := make([]int, 0)
+	for i := range large1 {
+		if i%2 != 0 {
+			expected = append(expected, i)
+		}
+	}
+	as.Equal(expected, Difference(large1, large2), "should handle large slices correctly")
+
+	// Test with nil slices
+	var nilSlice []int
+	as.Empty(Difference(nilSlice, []int{1, 2}), "nil first slice should return empty")
+	as.Equal([]int{1, 2}, Difference([]int{1, 2}, nilSlice), "nil second slice should return first slice")
+	as.Empty(Difference(nilSlice, nilSlice), "nil slices should return empty")
+
+	// Test with floating point numbers
+	floats1 := []float64{1.1, 2.2, 3.3, 4.4}
+	floats2 := []float64{2.2, 4.4}
+	as.Equal([]float64{1.1, 3.3}, Difference(floats1, floats2), "should work with floating point numbers")
+}
+
+func TestDifferenceBy(t *testing.T) {
+	t.Parallel()
+	as := assert.New(t)
+
+	// Test with integers
+	slice1 := []int{1, 2, 3, 4, 5}
+	slice2 := []int{2, 4, 6}
+	result := DifferenceBy(slice1, slice2, func(item int, _ int) int { return item })
+	as.Equal([]int{1, 3, 5}, result)
+
+	// Test with strings by length
+	strSlice1 := []string{"cat", "dog", "elephant", "fish"}
+	strSlice2 := []string{"cat", "dog", "fish"}
+	result2 := DifferenceBy(strSlice1, strSlice2, func(item string, _ int) string { return item })
+	as.Equal([]string{"elephant"}, result2) // only "elephant" has unique length
+
+	// Test with custom transformation
+	nums1 := []int{1, 2, 3, 4, 5}
+	nums2 := []int{2, 4, 6}
+	result3 := DifferenceBy(nums1, nums2, func(item int, _ int) int { return item * 2 })
+	as.Equal([]int{1, 3, 5}, result3)
+
+	// Test with empty slices
+	as.Empty(DifferenceBy([]int{}, []int{1, 2, 3}, func(item int, _ int) int { return item }))
+	as.Empty(DifferenceBy([]int{1, 2, 3}, []int{1, 2, 3}, func(item int, _ int) int { return item }))
+
+	// Test with nil inputs
+	as.Nil(DifferenceBy(nil, []int{1, 2, 3}, func(item int, _ int) int { return item }))
+	as.Nil(DifferenceBy([]int{1, 2, 3}, nil, func(item int, _ int) int { return item }))
+	as.Nil(DifferenceBy([]int{1, 2, 3}, []int{1, 2, 3}, nil))
+
+	// Test with identical slices
+	identical := []int{1, 2, 3}
+	as.Empty(DifferenceBy(identical, identical, func(item int, _ int) int { return item }))
+
+	// Test with custom struct
+	type Person struct {
+		Name string
+		Age  int
+	}
+	people1 := []Person{
+		{Name: "Alice", Age: 25},
+		{Name: "Bob", Age: 30},
+		{Name: "Charlie", Age: 35},
+	}
+	people2 := []Person{
+		{Name: "Alice", Age: 25},
+		{Name: "Bob", Age: 30},
+	}
+	// Compare by age
+	result4 := DifferenceBy(people1, people2, func(p Person, _ int) Person { return p })
+	as.Equal([]Person{{Name: "Charlie", Age: 35}}, result4)
 }

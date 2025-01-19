@@ -2,6 +2,7 @@ package slices
 
 import (
 	"math/rand"
+	"slices"
 	"sort"
 
 	"golang.org/x/exp/constraints"
@@ -916,6 +917,14 @@ func Count[T comparable](slice []T, value T) int {
 	return cnt
 }
 
+// Contains checks if a slice contains a specific item.
+//
+// Example:
+//
+//	nums := []int{1, 2, 3, 4, 5}
+//	contains := Contains(nums, 2) // Returns true
+func Contains[T comparable](slice []T, item T) bool { return Count(slice, item) > 0 }
+
 // CountBy returns the number of elements in the slice that satisfy the given predicate.
 //
 // Example:
@@ -936,6 +945,18 @@ func CountBy[T any](slice []T, predicate func(item T) bool) int {
 		}
 	}
 	return cnt
+}
+
+// ContainsBy checks if a slice contains any item that satisfies the given predicate.
+//
+// Example:
+//
+//	nums := []int{1, 2, 3, 4, 5, 6}
+//	contains := ContainsBy(nums, func(n int) bool {
+//	    return n%2 == 0
+//	}) // Returns true
+func ContainsBy[T any](slice []T, predicate func(item T) bool) bool {
+	return CountBy(slice, predicate) > 0
 }
 
 // CountValues returns a map that counts the number of occurrences of each unique value in the slice.
@@ -1019,6 +1040,55 @@ func SubSet[T any, Slice ~[]T](slice Slice, offset int, length uint) Slice {
 	ret := make(Slice, length)
 	copy(ret, slice[offset:offset+int(length)]) //nolint:gosec
 	return ret
+}
+
+// ContainsSubSlice checks if the subSlice exists as a continuous subsequence within the slice.
+// Returns true if subSlice appears as a continuous subsequence in slice, false otherwise.
+// An empty subSlice is considered to be contained in any slice.
+//
+// Example:
+//
+//	slice := []int{0, 1, 2, 3, 4, 5}
+//	subSlice := []int{2, 3, 4}
+//	contains := ContainsSubSlice(slice, subSlice) // Returns true
+//
+//	notContiguous := []int{2, 4}
+//	contains = ContainsSubSlice(slice, notContiguous) // Returns false
+func ContainsSubSlice[T comparable](slice, subSlice []T) bool {
+	// Empty subSlice is contained in any slice
+	if len(subSlice) == 0 {
+		return true
+	}
+
+	// If subSlice is longer than slice, it can't be contained
+	if len(subSlice) > len(slice) {
+		return false
+	}
+
+	// For single element, use Contains
+	if len(subSlice) == 1 {
+		for _, item := range slice {
+			if item == subSlice[0] {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Use sliding window to check for continuous subsequence
+	for i := 0; i <= len(slice)-len(subSlice); i++ {
+		match := true
+		for j := range subSlice {
+			if slice[i+j] != subSlice[j] {
+				match = false
+				break
+			}
+		}
+		if match {
+			return true
+		}
+	}
+	return false
 }
 
 // Slice returns a new slice containing elements from start (inclusive) to end (exclusive).
@@ -1123,14 +1193,14 @@ func ReplaceAll[T comparable, Slice ~[]T](slice Slice, old, new T) Slice {
 	return Replace(slice, old, new, -1)
 }
 
-// Compact returns a new slice with all zero values(0, "", false) removed.
+// RmZero returns a new slice with all zero values(0, "", false) removed.
 // The original slice remains unchanged.
 //
 // Example:
 //
 //	nums := []int{0, 1, 0, 2, 0, 3}
-//	result := Compact(nums) // returns []int{1, 2, 3}
-func Compact[T comparable, Slice ~[]T](slice Slice) Slice {
+//	result := RmZero(nums) // returns []int{1, 2, 3}
+func RmZero[T comparable, Slice ~[]T](slice Slice) Slice {
 	if len(slice) == 0 {
 		return slice
 	}
@@ -1268,4 +1338,75 @@ func Equal[T comparable](v1, v2 []T) bool {
 		}
 	}
 	return true
+}
+
+// Difference returns a new slice containing elements that are present in the first slice but not in the second slice.
+// The order of elements in the result is preserved.
+//
+// Example:
+//
+//	nums := []int{1, 2, 3, 4, 5}
+//	result := Difference(nums, []int{1, 2, 4}) // Returns []int{3, 5}
+func Difference[T comparable](slice, cmpSlice []T) []T {
+	// For empty slices, return early
+	if len(slice) == 0 {
+		return []T{}
+	}
+	if len(cmpSlice) == 0 {
+		ret := make([]T, len(slice))
+		copy(ret, slice)
+		return ret
+	}
+
+	// For small slices, use linear search
+	if len(cmpSlice) < 10 {
+		ret := make([]T, 0, len(slice))
+		for _, item := range slice {
+			if !slices.Contains(cmpSlice, item) {
+				ret = append(ret, item)
+			}
+		}
+		return ret
+	}
+
+	// For larger slices, use a map for O(1) lookups
+	lookup := make(map[T]struct{}, len(cmpSlice))
+	for _, item := range cmpSlice {
+		lookup[item] = struct{}{}
+	}
+
+	ret := make([]T, 0, len(slice))
+	for _, item := range slice {
+		if _, exists := lookup[item]; !exists {
+			ret = append(ret, item)
+		}
+	}
+
+	return ret
+}
+
+// DifferenceBy returns a new slice containing elements that are present in the first slice but not in the second slice.
+// The order of elements in the result is preserved.
+// The iteratee function is used to transform each element of the comparison slice before comparison.
+func DifferenceBy[T comparable](slice, cmpSlice []T, iteratee func(item T, idx int) T) []T {
+	if slice == nil || cmpSlice == nil || iteratee == nil {
+		return nil
+	}
+
+	// Pre-allocate result slice with a reasonable capacity
+	ret := make([]T, 0, len(slice))
+
+	// Transform comparison slice and store in map for O(1) lookup
+	cmpMap := make(map[T]struct{}, len(cmpSlice))
+	for idx, item := range cmpSlice {
+		cmpMap[iteratee(item, idx)] = struct{}{}
+	}
+
+	// Check each item from original slice
+	for idx, item := range slice {
+		if _, exists := cmpMap[iteratee(item, idx)]; !exists {
+			ret = append(ret, item)
+		}
+	}
+	return ret
 }
