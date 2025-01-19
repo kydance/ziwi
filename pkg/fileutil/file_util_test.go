@@ -45,6 +45,12 @@ func TestNewFileReader(t *testing.T) {
 	if data != string(testData) {
 		t.Errorf("Read data error, Expected: %q, Real: %q", string(testData)+"\n", data)
 	}
+
+	// Test with non-existent file
+	_, err = NewFileReader("/nonexistent/path/to/file.txt")
+	if err == nil {
+		t.Errorf("Expected error for non-existent file, but got nil")
+	}
 }
 
 func TestFileReader_ReadLine(t *testing.T) {
