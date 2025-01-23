@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kydance/ziwi/pkg/log"
+	"github.com/kydance/ziwi/log"
 )
 
 func TestTaskProcessor(t *testing.T) {
