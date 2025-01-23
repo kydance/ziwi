@@ -29,7 +29,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/kydance/ziwi/pkg/strutil"
+	"github.com/kydance/ziwi/strutil"
 )
 
 const (
