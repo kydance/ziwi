@@ -50,11 +50,7 @@ func TestTaskProcessor(t *testing.T) {
 	}
 
 	stats := processor.Metrics()
-	log.Infof(
-		"Porcessing completed. Completed tasks: %d, Errors: %d",
-		stats.completedTasks,
-		stats.errorCount,
-	)
+	log.Infof("Porcessing completed. Completed tasks: %d, Errors: %d", stats.completedTasks, stats.errorCount)
 }
 
 func TestTaskProcess_DataCut(t *testing.T) {

@@ -57,29 +57,21 @@ func NewTaskProcessor(options ...ProcessorOption) *TaskProcessor {
 
 // WithMaxWorkerCount configures the maximum number of workers for the TaskProcessor
 func WithMaxWorkerCount(n int) ProcessorOption {
-	return func(p *TaskProcessor) {
-		p.maxWorkers = n
-	}
+	return func(p *TaskProcessor) { p.maxWorkers = n }
 }
 
 // WithErrorHandler configures the error handler for tasks that encounter errors
 func WithErrorHandler(handler func(error)) ProcessorOption {
-	return func(p *TaskProcessor) {
-		p.errorHandler = handler
-	}
+	return func(p *TaskProcessor) { p.errorHandler = handler }
 }
 
 // WithResultHandler configures the result handler for tasks that return results
 func WithResultHandler(handler func(any)) ProcessorOption {
-	return func(p *TaskProcessor) {
-		p.resultHandler = handler
-	}
+	return func(p *TaskProcessor) { p.resultHandler = handler }
 }
 
 // ProcessInChunks processes tasks in chunks, distributing them among workers
-func (p *TaskProcessor) ProcessInChunks(ctx context.Context, tasks []any,
-	taskFunc func([]any) (any, error),
-) error {
+func (p *TaskProcessor) ProcessInChunks(ctx context.Context, tasks []any, taskFunc func([]any) (any, error)) error {
 	if len(tasks) == 0 {
 		return nil // no tasks to process
 	}
