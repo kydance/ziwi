@@ -1,16 +1,26 @@
 package log
 
-import "go.uber.org/zap/zapcore"
+import (
+	"fmt"
+
+	"github.com/kydance/ziwi/log/internal"
+	"go.uber.org/zap/zapcore"
+)
 
 const (
-	DefaultPrefix     = "ZIWI"
-	DefaultDir        = "logs"
+	DefaultPrefix     = "ZIWI_"
+	DefaultDirectory  = "./logs"
 	DefaultLevel      = zapcore.InfoLevel
 	DefaultTimeLayout = "2006-01-02 15:04:05.000"
 	DefaultFormat     = "console" // console style
-	DefaultMaxSize    = 100       // 100MB
-	DefaultMaxBackups = 3         // Keep 3 old log files
-	DefaultCompress   = false     // Not compress rotated log files
+
+	DefaultDisableCaller     = false
+	DefaultDisableStacktrace = false
+	DefaultDisableSplitError = true
+
+	DefaultMaxSize    = 100   // 100MB
+	DefaultMaxBackups = 3     // Keep 3 old log files
+	DefaultCompress   = false // Not compress rotated log files
 )
 
 // Options for logger
@@ -18,7 +28,7 @@ type Options struct {
 	Prefix    string // Log Prefix, e.g ZIWI
 	Directory string // Log File Directory, e.g logs
 
-	Level      string // Log Level, "debug", "info", "warn", "error", "dpanic", "panic", "fatal"
+	Level      string // Log Level, "debug", "info", "warn", "error"
 	TimeLayout string // Time Layout, e.g "2006-01-02 15:04:05.000"
 	Format     string // Log Format, "console", "json"
 
@@ -36,8 +46,8 @@ type Options struct {
 //
 // Default:
 //
-//	Prefix:    "ZIWI",
-//	Directory: "logs",
+//	Prefix:    "ZIWI_",
+//	Directory: "./logs",
 //
 //	Level:      "info",
 //	TimeLayout: "2006-01-02 15:04:05.000",
@@ -52,21 +62,183 @@ type Options struct {
 //	MaxBackups: 3,   // Keep 3 old log files
 //	Compress:   false,
 func NewOptions() *Options {
-	return &Options{
+	opt := &Options{
 		Prefix:    DefaultPrefix,
-		Directory: DefaultDir,
+		Directory: DefaultDirectory,
 
 		Level:      DefaultLevel.String(),
 		TimeLayout: DefaultTimeLayout,
 		Format:     DefaultFormat,
 
-		DisableCaller:     false,
-		DisableStacktrace: false,
-		DisableSplitError: false,
+		DisableCaller:     DefaultDisableCaller,
+		DisableStacktrace: DefaultDisableStacktrace,
+		DisableSplitError: DefaultDisableSplitError,
 
 		// Default log rotation settings
 		MaxSize:    DefaultMaxSize,
 		MaxBackups: DefaultMaxBackups,
 		Compress:   DefaultCompress,
 	}
+
+	if err := opt.Validate(); err != nil {
+		fmt.Printf("invalid options: %s", err)
+		return nil
+	}
+
+	return opt
+}
+
+func (opt *Options) WithPrefix(prefix string) *Options {
+	opt.Prefix = prefix
+
+	if err := opt.Validate(); err != nil {
+		fmt.Printf("invalid options: %s. The default options will be used.", err)
+		opt.Prefix = DefaultPrefix
+	}
+
+	return opt
+}
+
+func (opt *Options) WithDirectory(dir string) *Options {
+	opt.Directory = dir
+
+	if err := opt.Validate(); err != nil {
+		fmt.Printf("invalid options: %s. The default options will be used.", err)
+		opt.Directory = DefaultDirectory
+	}
+
+	return opt
+}
+
+func (opt *Options) WithLevel(level string) *Options {
+	opt.Level = level
+
+	if err := opt.Validate(); err != nil {
+		fmt.Printf("invalid options: %s. The default options will be used.", err)
+		opt.Level = DefaultLevel.String()
+	}
+
+	return opt
+}
+
+func (opt *Options) WithTimeLayout(timeLayout string) *Options {
+	opt.TimeLayout = timeLayout
+
+	if err := opt.Validate(); err != nil {
+		fmt.Printf("invalid options: %s. The default options will be used.", err)
+		opt.TimeLayout = DefaultTimeLayout
+	}
+
+	return opt
+}
+
+func (opt *Options) WithFormat(format string) *Options {
+	opt.Format = format
+
+	if err := opt.Validate(); err != nil {
+		fmt.Printf("invalid options: %s. The default options will be used.", err)
+		opt.Format = DefaultFormat
+	}
+
+	return opt
+}
+
+func (opt *Options) WithDisableCaller(disableCaller bool) *Options {
+	opt.DisableCaller = disableCaller
+
+	if err := opt.Validate(); err != nil {
+		fmt.Printf("invalid options: %s. The default options will be used.", err)
+		opt.DisableCaller = DefaultDisableCaller
+	}
+
+	return opt
+}
+
+func (opt *Options) WithDisableStacktrace(disableStacktrace bool) *Options {
+	opt.DisableStacktrace = disableStacktrace
+
+	if err := opt.Validate(); err != nil {
+		fmt.Printf("invalid options: %s. The default options will be used.", err)
+		opt.DisableStacktrace = DefaultDisableStacktrace
+	}
+
+	return opt
+}
+
+func (opt *Options) WithDisableSplitError(disableSplitError bool) *Options {
+	opt.DisableSplitError = disableSplitError
+
+	if err := opt.Validate(); err != nil {
+		fmt.Printf("invalid options: %s. The default options will be used.", err)
+		opt.DisableSplitError = DefaultDisableSplitError
+	}
+
+	return opt
+}
+
+func (opt *Options) WithMaxSize(maxSize int) *Options {
+	opt.MaxSize = maxSize
+
+	if err := opt.Validate(); err != nil {
+		fmt.Printf("invalid options: %s. The default options will be used.", err)
+		opt.MaxSize = DefaultMaxSize
+	}
+
+	return opt
+}
+
+func (opt *Options) WithMaxBackups(maxBackups int) *Options {
+	opt.MaxBackups = maxBackups
+
+	if err := opt.Validate(); err != nil {
+		fmt.Printf("invalid options: %s. The default options will be used.", err)
+		opt.MaxBackups = DefaultMaxBackups
+	}
+
+	return opt
+}
+
+func (opt *Options) WithCompress(compress bool) *Options {
+	opt.Compress = compress
+
+	if err := opt.Validate(); err != nil {
+		fmt.Printf("invalid options: %s. The default options will be used.", err)
+		opt.Compress = DefaultCompress
+	}
+
+	return opt
+}
+
+func (opt *Options) Validate() error {
+	if opt.Directory == "" {
+		return fmt.Errorf("invalid directory: %s, expected: not empty", opt.Directory)
+	}
+
+	if opt.Level != zapcore.DebugLevel.String() &&
+		opt.Level != zapcore.InfoLevel.String() &&
+		opt.Level != zapcore.WarnLevel.String() &&
+		opt.Level != zapcore.ErrorLevel.String() &&
+		opt.Level != zapcore.DPanicLevel.String() &&
+		opt.Level != zapcore.PanicLevel.String() &&
+		opt.Level != zapcore.FatalLevel.String() {
+		return fmt.Errorf("invalid level: %s, expected: debug, info, warn, error, dpanic, panic or fatal", opt.Level)
+	}
+
+	if err := internal.ValidateTimeLayout(opt.TimeLayout); err != nil {
+		return fmt.Errorf("invalid time layout: %s, expected: valid time layout", opt.TimeLayout)
+	}
+
+	if opt.Format != "console" && opt.Format != "json" {
+		return fmt.Errorf("invalid format: %s, expected: console or json", opt.Format)
+	}
+
+	if opt.MaxSize <= 0 {
+		return fmt.Errorf("invalid max size: %d, expected: > 0", opt.MaxSize)
+	}
+
+	if opt.MaxBackups <= 0 {
+		return fmt.Errorf("invalid max backups: %d, expected: > 0", opt.MaxBackups)
+	}
+
+	return nil
 }

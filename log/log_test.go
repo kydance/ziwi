@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLog_Init(t *testing.T) {
+func TestLog_Option(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
@@ -33,4 +33,11 @@ func TestLog_Init(t *testing.T) {
 		logger.Warnw("test warn", "i", i)
 		logger.Errorw("test error", "i", i)
 	}
+}
+
+func Test_Log(t *testing.T) {
+	t.Parallel()
+
+	NewLogger(nil)
+	Infoln("Test Log")
 }
