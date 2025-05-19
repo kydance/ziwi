@@ -1,16 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/kydance/ziwi/pkg/log"
-	"github.com/kydance/ziwi/pkg/strutil"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/kydance/ziwi/log"
 )
 
 const (
@@ -20,23 +19,17 @@ const (
 	envPrefix = "ZIWI"
 )
 
-var cfgFile string
+var cfg string
 
 // run is the real main entry point.
 func run() error {
-	settings, err := json.Marshal(viper.AllSettings())
-	if err != nil {
-		log.Errorw("Failed to marshal viper settings", "err", err)
-		return err
+	tableName := "tbTradiQueueRT_0"
+
+	if !strings.Contains(strings.ToUpper(tableName), "QUEUE") {
+		log.Errorf("not found QUEUE, tableName: %s", tableName)
+		return fmt.Errorf("not found QUEUE")
 	}
-
-	log.Infow(string(settings))
-
-	log.Debugf("strutil.CamelCase(\"hello world\"): %v\n", strutil.CamelCase("hello world"))
-
-	str := "*kyden*"
-	log.Debugf("strutil.UnWarp(str, \"*\"): %v\n", strutil.UnWarp(str, "*"))
-	log.Infoln(str)
+	log.Infof("found QUEUE, tableName: %s", tableName)
 
 	return nil
 }
@@ -55,17 +48,22 @@ Find more ziwi information at:
 
 		// When running cmd.Execute(), it will be called.
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Init log
-			log.Init(&log.Options{
+			log.NewLogger(&log.Options{
+				Prefix:    viper.GetString("log.prefix"),
+				Directory: viper.GetString("log.directory"),
+
+				TimeLayout: viper.GetString("log.time-layout"),
+				Level:      viper.GetString("log.level"),
+				Format:     viper.GetString("log.format"),
+
 				DisableCaller:     viper.GetBool("log.disable-caller"),
 				DisableStacktrace: viper.GetBool("log.disable-stacktrace"),
-				Level:             viper.GetString("log.level"),
-				Format:            viper.GetString("log.format"),
-				OutputPaths:       viper.GetStringSlice("log.output-paths"),
-			})
+				DisableSplitError: viper.GetBool("log.disable-split-error"),
 
-			// Sync write buffer log to file
-			defer log.Sync()
+				MaxSize:    viper.GetInt("log.max-size"),
+				MaxBackups: viper.GetInt("log.max-backups"),
+				Compress:   viper.GetBool("log.compress"),
+			})
 
 			return run()
 		},
@@ -88,7 +86,7 @@ Find more ziwi information at:
 	// ...
 
 	// 持久性标志(PersistentFlag)，该标志可用于它所分配的命令以及该命令下的每个子命令
-	cmd.PersistentFlags().StringVarP(&cfgFile, "config", "c",
+	cmd.PersistentFlags().StringVarP(&cfg, "config", "c",
 		"", "The path to the ziwi configuration file. Empty string for no configuration file.")
 	// 本地标志，本地标志只能在其所绑定的命令上使用
 	cmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -97,9 +95,9 @@ Find more ziwi information at:
 }
 
 func initConfig() {
-	if cfgFile != "" {
+	if cfg != "" {
 		// Read config file from cfgFile.
-		viper.SetConfigFile(cfgFile)
+		viper.SetConfigFile(cfg)
 	} else {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)

@@ -1,11 +1,12 @@
 module github.com/kydance/ziwi
 
-go 1.22.7
+go 1.24.3
 
 require (
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
 require (
