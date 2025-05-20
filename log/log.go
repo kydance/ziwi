@@ -121,7 +121,7 @@ func (l *ZiwiLog) EncodeEntry(entry zapcore.Entry, fields []zapcore.Field) (*buf
 	_, _ = l.file.Write(data)
 
 	// For error level logs, also write to error log file
-	if entry.Level == zapcore.ErrorLevel {
+	if entry.Level == zapcore.ErrorLevel && l.errFile != nil {
 		_, _ = l.errFile.Write(data)
 	}
 
