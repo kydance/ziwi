@@ -13,3 +13,4 @@ log:
   max-size: 100         # Maximum size of log files in megabytes before rotation
   max-backups: 3        # Maximum number of old log files to retain
   compress: false       # Whether to compress rotated log files: false / true
+
