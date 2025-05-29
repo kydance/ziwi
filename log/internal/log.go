@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -58,7 +59,7 @@ func SetupAutoSync(syncFunc func()) {
 // It returns an error if the layout string is invalid.
 func ValidateTimeLayout(layout string) error {
 	if layout == "" {
-		return fmt.Errorf("time layout is empty")
+		return errors.New("time layout is empty")
 	}
 
 	referenceTime := time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC)

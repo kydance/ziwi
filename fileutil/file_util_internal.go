@@ -30,7 +30,7 @@ func addFileToArchive(archive *zip.Writer, src string) error {
 			if err != nil {
 				return err
 			}
-			file, err := os.Open(path)
+			file, err := os.Open(path) //nolint:gosec
 			if err != nil {
 				return err
 			}
@@ -45,14 +45,14 @@ func addFileToArchive(archive *zip.Writer, src string) error {
 }
 
 func zipFile(dst, src string) error {
-	zf, err := os.Create(dst)
+	zf, err := os.Create(dst) //nolint:gosec
 	if err != nil {
 		return err
 	}
 	defer zf.Close()
 
 	archive := zip.NewWriter(zf)
-	defer archive.Close()
+	defer func() { _ = archive.Close() }()
 
 	return addFileToArchive(archive, src)
 }
@@ -68,7 +68,7 @@ func addFileToArchive2(w *zip.Writer, basePath, baseInZip string) error {
 
 	for _, file := range files {
 		if !file.IsDir() {
-			dat, err := os.ReadFile(basePath + file.Name())
+			dat, err := os.ReadFile(basePath + file.Name()) //nolint:gosec
 			if err != nil {
 				return err
 			}
@@ -91,7 +91,7 @@ func addFileToArchive2(w *zip.Writer, basePath, baseInZip string) error {
 }
 
 func zipDir(dst, src string) error {
-	outFile, err := os.Create(dst)
+	outFile, err := os.Create(dst) //nolint:gosec
 	if err != nil {
 		return err
 	}

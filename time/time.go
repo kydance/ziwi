@@ -283,9 +283,9 @@ func (t *Time) EndOfYear() time.Time {
 
 // DayOfYears returns which day of the year. firstday: 0
 func (t *Time) DayOfYear() int {
-	y_, m_, d_ := t.Date()
-	firstDay := time.Date(y_, 1, 1, 0, 0, 0, 0, t.Location())
-	currDay := time.Date(y_, m_, d_, 0, 0, 0, 0, t.Location())
+	y, m, d := t.Date()
+	firstDay := time.Date(y, 1, 1, 0, 0, 0, 0, t.Location())
+	currDay := time.Date(y, m, d, 0, 0, 0, 0, t.Location())
 
 	return int(currDay.Sub(firstDay).Hours() / 24)
 }

@@ -9,7 +9,7 @@ import (
 
 const (
 	DefaultPrefix     = "ZIWI_"
-	DefaultDirectory  = "./logs"
+	DefaultDirectory  = "~/logs"
 	DefaultLevel      = zapcore.InfoLevel
 	DefaultTimeLayout = "2006-01-02 15:04:05.000"
 	DefaultFormat     = "console" // console style
@@ -47,7 +47,7 @@ type Options struct {
 // Default:
 //
 //	Prefix:    "ZIWI_",
-//	Directory: "./logs",
+//	Directory: "~/logs",
 //
 //	Level:      "info",
 //	TimeLayout: "2006-01-02 15:04:05.000",

@@ -18,6 +18,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/csv"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"hash"
@@ -48,7 +49,7 @@ type FileReader struct {
 
 // NewFileReader creates a new FileReader with the given path.
 func NewFileReader(path string) (*FileReader, error) {
-	f, err := os.Open(path)
+	f, err := os.Open(path) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +63,7 @@ func NewFileReader(path string) (*FileReader, error) {
 
 // ReadLine reads a line and returns it excluding the trailing '\r' and '\n'.
 func (fr *FileReader) ReadLine() (string, error) {
-	dat, err := fr.Reader.ReadBytes('\n')
+	dat, err := fr.ReadBytes('\n')
 	fr.off += int64(len(dat))
 	if err == nil || err == io.EOF {
 		for len(dat) > 0 && (dat[len(dat)-1] == '\r' || dat[len(dat)-1] == '\n') {
@@ -109,7 +110,7 @@ func IsExist(path string) bool {
 
 // CreateFile creates a file with the given path.
 func CreateFile(path string) bool {
-	f, err := os.Create(path)
+	f, err := os.Create(path) //nolint:gosec
 	if err != nil {
 		return false
 	}
@@ -122,18 +123,18 @@ func CreateFile(path string) bool {
 //
 //	dir: absolute path like `/dev/null`
 func CreateDir(dir string) error {
-	return os.MkdirAll(dir, os.ModePerm)
+	return os.MkdirAll(dir, os.ModePerm) //nolint:gosec
 }
 
 // CopyFile copies a file from src to dst. Support relative / absolute path.
 func CopyFile(dst, src string) error {
-	sf, err := os.Open(src)
+	sf, err := os.Open(src) //nolint:gosec
 	if err != nil {
 		return err
 	}
 	defer sf.Close()
 
-	df, err := os.Create(dst)
+	df, err := os.Create(dst) //nolint:gosec
 	if err != nil {
 		return err
 	}
@@ -150,7 +151,7 @@ func RemoveFile(file string) error {
 
 // ClearFile clears a file, that is, it will write an empty string to the file.
 func ClearFile(file string) error {
-	f, err := os.OpenFile(file, os.O_WRONLY|os.O_TRUNC, 0o777)
+	f, err := os.OpenFile(file, os.O_WRONLY|os.O_TRUNC, 0o777) //nolint:gosec
 	if err != nil {
 		return err
 	}
@@ -171,7 +172,7 @@ func CopyDir(dst, src string) error {
 		return fmt.Errorf("source is not a directory: %s", src)
 	}
 
-	err = os.MkdirAll(dst, 0o775)
+	err = os.MkdirAll(dst, 0o775) //nolint:gosec
 	if err != nil {
 		return fmt.Errorf("failed to create destination directory: %w", err)
 	}
@@ -212,7 +213,7 @@ func IsDir(path string) bool {
 
 // ReadFileToString reads a file and returns its content as a string.
 func ReadFileToString(file string) (string, error) {
-	vb, err := os.ReadFile(file)
+	vb, err := os.ReadFile(file) //nolint:gosec
 	if err != nil {
 		return "", err
 	}
@@ -222,7 +223,7 @@ func ReadFileToString(file string) (string, error) {
 
 // ReadFileByLine reads a file and returns its content line by line.
 func ReadFileByLine(file string) ([]string, error) {
-	f, err := os.Open(file)
+	f, err := os.Open(file) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +274,7 @@ func FilesCurDir(dir string) ([]string, error) {
 
 // IsZipFile checks if a file is a zip file (PK\x03\x04).
 func IsZipFile(file string) bool {
-	f, err := os.Open(file)
+	f, err := os.Open(file) //nolint:gosec
 	if err != nil {
 		return false
 	}
@@ -303,7 +304,7 @@ func UnZip(dst, src string) error {
 	if err != nil {
 		return err
 	}
-	defer zipReader.Close()
+	defer func() { _ = zipReader.Close() }()
 
 	for _, f := range zipReader.File {
 		path, err := safeFilepathJoin(dst, f.Name)
@@ -312,12 +313,12 @@ func UnZip(dst, src string) error {
 		}
 
 		if f.FileInfo().IsDir() {
-			err = os.MkdirAll(path, os.ModePerm)
+			err = os.MkdirAll(path, os.ModePerm) //nolint:gosec
 			if err != nil {
 				return err
 			}
 		} else {
-			err = os.MkdirAll(filepath.Dir(path), os.ModePerm)
+			err = os.MkdirAll(filepath.Dir(path), os.ModePerm) //nolint:gosec
 			if err != nil {
 				return err
 			}
@@ -326,9 +327,9 @@ func UnZip(dst, src string) error {
 			if err != nil {
 				return err
 			}
-			defer inFile.Close()
+			defer func() { _ = inFile.Close() }()
 
-			outFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			outFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode()) //nolint:gosec
 			if err != nil {
 				return err
 			}
@@ -454,7 +455,7 @@ func MiMeType[T string | *os.File](file T) string {
 
 	switch fp := any(file).(type) {
 	case string:
-		f, err := os.Open(fp)
+		f, err := os.Open(fp) //nolint:gosec
 		if err != nil {
 			return mediatype
 		}
@@ -520,7 +521,7 @@ func MTime(file string) (int64, error) {
 //
 //	SHATpye: [1, 256, 512]
 func SHA(file string, SHAType ...int) (string, error) {
-	f, err := os.Open(file)
+	f, err := os.Open(file) //nolint:gosec
 	if err != nil {
 		return "", err
 	}
@@ -553,12 +554,12 @@ func SHA(file string, SHAType ...int) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
 // ReadCSV read file content into slices.
 func ReadCSV(file string, delimiter ...rune) ([][]string, error) {
-	f, err := os.Open(file)
+	f, err := os.Open(file) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}
@@ -581,13 +582,13 @@ func ReadCSV(file string, delimiter ...rune) ([][]string, error) {
 //
 //	append: append to existing csv file
 //	delimiter: specifies csv delimiter
-func WriteCSV(file string, records [][]string, append bool, delimiter ...rune) error {
+func WriteCSV(file string, records [][]string, appendToTail bool, delimiter ...rune) error {
 	flag := os.O_RDWR | os.O_CREATE
-	if append {
+	if appendToTail {
 		flag |= os.O_APPEND
 	}
 
-	f, err := os.OpenFile(file, flag, 0o644)
+	f, err := os.OpenFile(file, flag, 0o644) //nolint:gosec
 	if err != nil {
 		return err
 	}
@@ -657,15 +658,15 @@ func WriteMapsToCSV(file string, records []map[string]any,
 }
 
 // WriteStringToFile writes string to specifies file.
-func WriteStringToFile(file, content string, append bool) error {
+func WriteStringToFile(file, content string, appendToTail bool) error {
 	flag := os.O_RDWR | os.O_CREATE
-	if append {
+	if appendToTail {
 		flag |= os.O_APPEND
 	} else {
 		flag |= os.O_TRUNC
 	}
 
-	f, err := os.OpenFile(file, flag, 0o644)
+	f, err := os.OpenFile(file, flag, 0o644) //nolint:gosec
 	if err != nil {
 		return err
 	}
@@ -677,7 +678,7 @@ func WriteStringToFile(file, content string, append bool) error {
 
 // WriteBytesToFile writes bytes to specified file with O_TRUNC flag.
 func WriteBytesToFile(file string, content []byte) error {
-	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644) //nolint:gosec
 	if err != nil {
 		return err
 	}
@@ -698,15 +699,17 @@ func ReadFile(path string) (reader io.ReadCloser, closeFn func(), err error) {
 			return nil, func() {}, err
 		}
 
-		return resp.Body, func() { resp.Body.Close() }, nil
+		return resp.Body, func() { _ = resp.Body.Close() }, nil
 
 	case IsExist(path):
-		reader, err := os.Open(path)
+		reader, err := os.Open(path) //nolint:gosec
 		if err != nil {
 			return nil, func() {}, err
 		}
 
-		return reader, func() { reader.Close() }, nil
+		return reader, func() {
+			reader.Close() //nolint:gosec
+		}, nil
 
 	default:
 		return nil, func() {}, errors.New("unknown file type")
@@ -717,7 +720,11 @@ func ReadFile(path string) (reader io.ReadCloser, closeFn func(), err error) {
 // returns all lines within block
 func ChunkRead(file *os.File, offset int64, size int, bufPool *sync.Pool) ([]string, error) {
 	// Get buf from pool and adjust size
-	buf := (*bufPool.Get().(*[]byte))[:size]
+	temp, ok := bufPool.Get().(*[]byte)
+	if !ok {
+		return nil, errors.New("failed to get buffer from pool")
+	}
+	buf := (*temp)[:size]
 
 	// Read data from offset position
 	n, err := file.ReadAt(buf, offset)
@@ -778,7 +785,7 @@ func ParallelChunkRead(file string, chLines chan<- []string, chunkSizeMB, maxGor
 	}
 
 	// Open the file and handle errors
-	f, err := os.Open(file)
+	f, err := os.Open(file) //nolint:gosec
 	if err != nil {
 		return err
 	}

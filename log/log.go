@@ -136,7 +136,7 @@ func (l *ZiwiLog) setupLogFiles(date string) error {
 	}
 
 	// Ensure log directory exists
-	if err := os.MkdirAll(l.logDir, 0o755); err != nil {
+	if err := os.MkdirAll(l.logDir, 0o755); err != nil { //nolint:gosec
 		return fmt.Errorf("create log dir error: %w", err)
 	}
 

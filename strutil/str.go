@@ -275,7 +275,7 @@ func SubString(src string, begin int, size int) string {
 	}
 
 	str := string(vr[begin : begin+size])
-	return strings.Replace(str, "\x00", "", -1)
+	return strings.ReplaceAll(str, "\x00", "")
 }
 
 // RemoveNonPrintable removes all non-printable characters from the string.
@@ -289,10 +289,16 @@ func RemoveNonPrintable(str string) string {
 }
 
 // StringToBytes converts the string to byte slice without memory alloc.
-func StringToBytes(str string) []byte { return *(*[]byte)(unsafe.Pointer(&str)) }
+//
+// This is safe because we're not modifying the bytes and the string's underlying data is immutable.
+// The returned slice must not be modified.
+func StringToBytes(str string) []byte { return *(*[]byte)(unsafe.Pointer(&str)) } //nolint:gosec
 
 // BytesToString converts the byte slice to string without memory alloc.
-func BytesToString(bs []byte) string { return *(*string)(unsafe.Pointer(&bs)) }
+//
+// This is safe because strings are immutable in Go and we're not modifying the original byte slice.
+// The original byte slice should not be modified after this conversion.
+func BytesToString(bs []byte) string { return *(*string)(unsafe.Pointer(&bs)) } //nolint:gosec
 
 // IsSpace checks if the string is whitespace, empty or not.
 //

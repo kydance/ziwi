@@ -967,7 +967,7 @@ func TestIsZeroValue(t *testing.T) {
 	// nil channel
 	assert.True(IsZeroValue(make(chan int)))
 	// zero len channel
-	assert.True(IsZeroValue(make(chan int, 0)))
+	assert.True(IsZeroValue(make(chan int)))
 
 	// nil function
 	assert.True(IsZeroValue(nil))

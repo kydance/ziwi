@@ -730,7 +730,10 @@ func DropWhile[T any, Slice ~[]T](slice Slice, predicate func(item T) bool) Slic
 	}
 
 	idx := 0
-	for ; idx < len(slice) && predicate(slice[idx]); idx++ {
+	for ; idx < len(slice); idx++ {
+		if !predicate(slice[idx]) {
+			break
+		}
 	}
 
 	if idx == len(slice) {
@@ -757,7 +760,10 @@ func DropRightWhile[T any, Slice ~[]T](slice Slice, predicate func(item T) bool)
 	}
 
 	idx := len(slice) - 1
-	for ; idx >= 0 && predicate(slice[idx]); idx-- {
+	for ; idx >= 0; idx-- {
+		if !predicate(slice[idx]) {
+			break
+		}
 	}
 
 	if idx < 0 {
@@ -1137,7 +1143,7 @@ func Slice[T any, Slice ~[]T](slice Slice, start, end int) Slice {
 //
 //	nums := []int{1, 2, 2, 3, 2, 4}
 //	result := Replace(nums, 2, 5, 2) // returns []int{1, 5, 5, 3, 2, 4}
-func Replace[T comparable, Slice ~[]T](slice Slice, old, new T, n int) Slice {
+func Replace[T comparable, Slice ~[]T](slice Slice, src, dst T, n int) Slice {
 	if len(slice) == 0 || n == 0 {
 		return slice
 	}
@@ -1146,7 +1152,7 @@ func Replace[T comparable, Slice ~[]T](slice Slice, old, new T, n int) Slice {
 	if n < 0 {
 		hasOld := false
 		for _, v := range slice {
-			if v == old {
+			if v == src {
 				hasOld = true
 				break
 			}
@@ -1161,8 +1167,8 @@ func Replace[T comparable, Slice ~[]T](slice Slice, old, new T, n int) Slice {
 
 	if n < 0 {
 		for i := range ret {
-			if ret[i] == old {
-				ret[i] = new
+			if ret[i] == src {
+				ret[i] = dst
 			}
 		}
 		return ret
@@ -1173,8 +1179,8 @@ func Replace[T comparable, Slice ~[]T](slice Slice, old, new T, n int) Slice {
 		if count == 0 {
 			break
 		}
-		if ret[i] == old {
-			ret[i] = new
+		if ret[i] == src {
+			ret[i] = dst
 			count--
 		}
 	}
@@ -1189,8 +1195,8 @@ func Replace[T comparable, Slice ~[]T](slice Slice, old, new T, n int) Slice {
 //
 //	nums := []int{1, 2, 2, 3, 2, 4}
 //	result := ReplaceAll(nums, 2, 5) // returns []int{1, 5, 5, 3, 5, 4}
-func ReplaceAll[T comparable, Slice ~[]T](slice Slice, old, new T) Slice {
-	return Replace(slice, old, new, -1)
+func ReplaceAll[T comparable, Slice ~[]T](slice Slice, src, dst T) Slice {
+	return Replace(slice, src, dst, -1)
 }
 
 // RmZero returns a new slice with all zero values(0, "", false) removed.

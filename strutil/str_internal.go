@@ -104,10 +104,13 @@ func padAtPos(str string, size int, pad string, pos Pos) string {
 	// Calculate the number of padding characters needed.
 	size = size - len(str)
 	leftPadSize := 0
-	if pos == 0 {
+	switch pos {
+	case PosBoth:
 		leftPadSize = size / 2
-	} else if pos == 1 {
+	case PosLeft:
 		leftPadSize = size
+	default:
+		leftPadSize = 0
 	}
 	rightPadSize := size - leftPadSize
 
@@ -116,7 +119,7 @@ func padAtPos(str string, size int, pad string, pos Pos) string {
 	builder.Grow(size + len(str))
 
 	// Pad left
-	for i := 0; i < leftPadSize; i++ {
+	for i := range leftPadSize {
 		builder.WriteByte(pad[i%padSize])
 	}
 
@@ -124,7 +127,7 @@ func padAtPos(str string, size int, pad string, pos Pos) string {
 	builder.WriteString(str)
 
 	// Pad right
-	for i := 0; i < rightPadSize; i++ {
+	for i := range rightPadSize {
 		builder.WriteByte(pad[i%padSize])
 	}
 
