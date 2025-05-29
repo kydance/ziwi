@@ -2,14 +2,24 @@ package log
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/kydance/ziwi/log/internal"
 	"go.uber.org/zap/zapcore"
 )
 
+// DefaultDirectory returns the default log directory, which is typically the user's home directory joined with "logs".
+var DefaultDirectory = func() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to get user home directory: %v", err))
+	}
+	return filepath.Join(home, "logs")
+}()
+
 const (
 	DefaultPrefix     = "ZIWI_"
-	DefaultDirectory  = "~/logs"
 	DefaultLevel      = zapcore.InfoLevel
 	DefaultTimeLayout = "2006-01-02 15:04:05.000"
 	DefaultFormat     = "console" // console style
@@ -47,7 +57,7 @@ type Options struct {
 // Default:
 //
 //	Prefix:    "ZIWI_",
-//	Directory: "~/logs",
+//	Directory: "$HOME/logs",
 //
 //	Level:      "info",
 //	TimeLayout: "2006-01-02 15:04:05.000",

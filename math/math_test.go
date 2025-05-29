@@ -66,8 +66,8 @@ func TestRoundToFloat(t *testing.T) {
 	assert.Equal(float64(123.45679), RoundToFloat(123.456789, 5))
 
 	// Round float64 with negative decimals
-	assert.Equal(float64(123.0), RoundToFloat(123.456789, -1))
-	assert.Equal(float64(123.0), RoundToFloat(123.456789, -2))
+	assert.Equal(float64(120.0), RoundToFloat(123.456789, -1))
+	assert.Equal(float64(100.0), RoundToFloat(123.456789, -2))
 }
 
 func TestRoundToString(t *testing.T) {
